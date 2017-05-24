@@ -67,7 +67,7 @@
     <View style="@style/StatusBarPanelSettingsPanelSeparator" />
 
     <!-- Rotation lock -->
-    <LinearLayout
+<!--    <LinearLayout
             android:id="@+id/rotate"
             style="@style/StatusBarPanelSettingsRow"
             >
@@ -92,7 +92,7 @@
     <View
             android:id="@+id/rotate_separator"
             style="@style/StatusBarPanelSettingsPanelSeparator" />
-
+-->
     <!-- Brightness -->
     <LinearLayout style="@style/StatusBarPanelSettingsRow" >
         <ImageView

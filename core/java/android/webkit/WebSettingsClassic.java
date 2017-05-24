@@ -25,7 +25,7 @@ import android.os.Message;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.util.EventLog;
-
+import android.util.Log;
 import java.util.Locale;
 
 /**
@@ -79,6 +79,7 @@ public class WebSettingsClassic extends WebSettings {
     private boolean         mShowVisualIndicator = false;
     private PluginState     mPluginState = PluginState.OFF;
     private boolean         mJavaScriptCanOpenWindowsAutomatically = false;
+	private boolean         mAllowPopupVideo = false;
     private boolean         mUseDoubleTree = false;
     private boolean         mUseWideViewport = false;
     private boolean         mSupportMultipleWindows = false;
@@ -124,6 +125,7 @@ public class WebSettingsClassic extends WebSettings {
     private boolean         mEnableSmoothTransition = false;
     private boolean         mForceUserScalable = false;
     private boolean         mPasswordEchoEnabled = true;
+    private static int      mAdBlockPolicy = -1;
 
     // AutoFill Profile data
     public static class AutoFillProfile {
@@ -262,9 +264,12 @@ public class WebSettingsClassic extends WebSettings {
         "Linux x86_64) AppleWebKit/534.24 (KHTML, like Gecko) " +
         "Chrome/11.0.696.34 Safari/534.24";
     private static final String IPHONE_USERAGENT =
-            "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us)"
-            + " AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0"
-            + " Mobile/7A341 Safari/528.16";
+            "Mozilla/5.0 (iPhone; U; " +
+        "CPU iPhone OS 5_1_1 like Mac OS X; en-us) AppleWebKit/534.46 " +
+        "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3";
+    private static final String IPAD_USERAGENT = "Mozilla/5.0 (iPad; CPU OS 5_1 " + 
+		"like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko ) Version/5.1 " + 
+		"Mobile/9B176 Safari/7534.48.3";
     private static Locale sLocale;
     private static Object sLockForLocaleSettings;
 
@@ -684,6 +689,16 @@ public class WebSettingsClassic extends WebSettings {
         if (mDefaultZoom != zoom) {
             mDefaultZoom = zoom;
             mWebView.adjustDefaultZoomDensity(zoom.value);
+        }
+    }
+
+    /**
+     * @hide
+     */
+    public synchronized void setAdBlockPolicy(int policy) {
+        if (mAdBlockPolicy != policy) {
+            mAdBlockPolicy = policy;
+            nativeSetBlockPolicy(policy);
         }
     }
 
@@ -1613,7 +1628,21 @@ public class WebSettingsClassic extends WebSettings {
             postSync();
         }
     }
-
+	/**
+	*@hide
+	*/
+	/*package*/public synchronized void setPopupVideoEnable(boolean flag){
+		if(mAllowPopupVideo != flag){
+			mAllowPopupVideo = flag;
+			postSync();				
+		}
+	}
+	/**
+	*@hide
+	*/
+	/*package*/ synchronized boolean isPopupVideoEnable(){
+		return mAllowPopupVideo;
+	}
     /**
      * Returns whether the viewport metatag can disable zooming
      */
@@ -1730,7 +1759,16 @@ public class WebSettingsClassic extends WebSettings {
                     Message.obtain(null, EventHandler.SYNC));
         }
     }
+	/**
+	*@hide
+	*/
+	public void setIpadUA() {
+		//Log.i("yyyy","-----setipdaua:getCurrentUserAgent:"+getCurrentUserAgent()+"---mUserAgent:"+mUserAgent);
+		setUserAgentString(IPAD_USERAGENT);
+		//Log.i("yyyyy","nowcurrentuseragent:"+getCurrentUserAgent()+":"+mUserAgent);						
+	}
 
     // Synchronize the native and java settings.
     private native void nativeSync(int nativeFrame);
+    private native void nativeSetBlockPolicy(int policy);
 }

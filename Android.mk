@@ -28,10 +28,33 @@ framework_res_source_path := APPS/framework-res_intermediates/src
 
 # the library
 # ============================================================
+##$_modify_$_20120905: add framework2
+##$$_modify_$_begin
+#
+# These will be included in framework2 to avoid issues with the limit
+# on the number of classes/dex
+
+SECONDARY_FRAMEWORKS_SUBDIRS := \
+        core/java/android/test \
+        core/java/android/gesture \
+        core/java/android/speech/srec \
+        media/java/android/media/videoeditor \
+        media/java/android/media/audiofx \
+        media/mca/effect/java/android/media/effect \
+        media/mca/effect/java/android/media/effect/effects
+#$_modify_$_end
+
 include $(CLEAR_VARS)
 
 # FRAMEWORKS_BASE_SUBDIRS comes from build/core/pathmap.mk
 LOCAL_SRC_FILES := $(call find-other-java-files,$(FRAMEWORKS_BASE_SUBDIRS))
+
+##$_modify_$_20120905: add framework2
+##$_modify_$_begin
+SECONDARY_SRC_FILES := $(call find-other-java-files,$(SECONDARY_FRAMEWORKS_SUBDIRS))
+
+LOCAL_SRC_FILES := $(filter-out $(SECONDARY_SRC_FILES),$(LOCAL_SRC_FILES))
+##$_modify_$_end
 
 # EventLogTags files.
 LOCAL_SRC_FILES += \
@@ -209,10 +232,11 @@ LOCAL_SRC_FILES += \
 	telephony/java/com/android/internal/telephony/IWapPushManager.aidl \
 	wifi/java/android/net/wifi/IWifiManager.aidl \
 	wifi/java/android/net/wifi/p2p/IWifiP2pManager.aidl \
+	ethernet/java/android/net/ethernet/IEthernetManager.aidl \
 	telephony/java/com/android/internal/telephony/IExtendedNetworkService.aidl \
 	voip/java/android/net/sip/ISipSession.aidl \
 	voip/java/android/net/sip/ISipSessionListener.aidl \
-	voip/java/android/net/sip/ISipService.aidl
+	voip/java/android/net/sip/ISipService.aidl \
 #
 
 
@@ -252,6 +276,10 @@ $(full_classes_compiled_jar): $(framework_res_R_stamp)
 $(LOCAL_INSTALLED_MODULE): | $(dir $(LOCAL_INSTALLED_MODULE))framework-res.apk
 
 framework_built := $(call java-lib-deps,framework)
+##$_modify_20120905: add framework2
+##$_modify_$_begin
+framework_built += $(call java-lib-deps,framework2)
+##$_modify_$_end
 
 # AIDL files to be preprocessed and included in the SDK,
 # relative to the root of the build tree.
@@ -385,11 +413,13 @@ framework_docs_LOCAL_INTERMEDIATE_SOURCES := \
 			$(framework_res_source_path)/android/Manifest.java \
 			$(framework_res_source_path)/com/android/internal/R.java
 
+##$_modify_20120905: add framework2
 framework_docs_LOCAL_JAVA_LIBRARIES := \
 			bouncycastle \
 			core \
 			ext \
 			framework \
+			framework2
 
 framework_docs_LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 framework_docs_LOCAL_DROIDDOC_HTML_DIR := docs/html
@@ -664,7 +694,9 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:=$(framework_docs_LOCAL_SRC_FILES)
 LOCAL_INTERMEDIATE_SOURCES:=$(framework_docs_LOCAL_INTERMEDIATE_SOURCES)
-LOCAL_JAVA_LIBRARIES:=$(framework_docs_LOCAL_JAVA_LIBRARIES) framework
+
+##$_modify_20120905: add framework2
+LOCAL_JAVA_LIBRARIES:=$(framework_docs_LOCAL_JAVA_LIBRARIES) framework framework2
 LOCAL_MODULE_CLASS:=$(framework_docs_LOCAL_MODULE_CLASS)
 LOCAL_DROIDDOC_SOURCE_PATH:=$(framework_docs_LOCAL_DROIDDOC_SOURCE_PATH)
 LOCAL_DROIDDOC_HTML_DIR:=$(framework_docs_LOCAL_DROIDDOC_HTML_DIR)
@@ -717,6 +749,29 @@ LOCAL_DX_FLAGS := --core-library
 
 include $(BUILD_JAVA_LIBRARY)
 
+##$_modify_20120905: add framework2
+##$_modify_$_begin
+include $(CLEAR_VARS)
+
+# FRAMEWORKS_BASE_SUBDIRS comes from build/core/pathmap.mk
+LOCAL_SRC_FILES := $(call find-other-java-files,$(SECONDARY_FRAMEWORKS_SUBDIRS))
+
+LOCAL_NO_STANDARD_LIBRARIES := true
+LOCAL_JAVA_LIBRARIES := bouncycastle core core-junit ext framework
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := framework2
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+
+LOCAL_NO_EMMA_INSTRUMENT := true
+LOCAL_NO_EMMA_COMPILE := true
+
+#LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
+
+LOCAL_DX_FLAGS := --core-library
+
+include $(BUILD_JAVA_LIBRARY)
+##$_modify_$_end
 
 # Include subdirectory makefiles
 # ============================================================

@@ -261,7 +261,7 @@ public class WifiWatchdogStateMachine extends StateMachine {
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
-        sWifiOnly = (cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false);
+        sWifiOnly = true;//(cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false);
 
         // Watchdog is always enabled. Poor network detection & walled garden detection
         // can individually be turned on/off

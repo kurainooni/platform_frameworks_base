@@ -53,6 +53,8 @@
 #include "com_android_server_input_InputApplicationHandle.h"
 #include "com_android_server_input_InputWindowHandle.h"
 
+#include <cutils/properties.h>
+
 namespace android {
 
 // The exponent used to calculate the pointer speed scaling factor.
@@ -227,6 +229,7 @@ private:
         int32_t displayOrientation;
         int32_t displayExternalWidth, displayExternalHeight; // -1 when not initialized
         int32_t displayExternalOrientation;
+        int32_t hardwareRotation;
 
         // System UI visibility.
         int32_t systemUiVisibility;
@@ -280,6 +283,12 @@ NativeInputManager::NativeInputManager(jobject contextObj,
         mLocked.displayExternalWidth = -1;
         mLocked.displayExternalHeight = -1;
         mLocked.displayExternalOrientation = DISPLAY_ORIENTATION_0;
+        mLocked.hardwareRotation = 0;
+        char property[PROPERTY_VALUE_MAX];
+        if (property_get("ro.sf.hwrotation", property, "0") > 0) {
+            mLocked.hardwareRotation = atoi(property) / 90;
+            mLocked.displayOrientation = (mLocked.hardwareRotation + DISPLAY_ORIENTATION_0) % 4;
+        }
 
         mLocked.systemUiVisibility = ASYSTEM_UI_VISIBILITY_STATUS_BAR_VISIBLE;
         mLocked.pointerSpeed = 0;
@@ -323,6 +332,15 @@ void NativeInputManager::setDisplaySize(int32_t displayId, int32_t width, int32_
         AutoMutex _l(mLock);
 
         if (mLocked.displayWidth != width || mLocked.displayHeight != height) {
+            if (mLocked.hardwareRotation % 2 == 1) {
+                int tmp = width;
+                width = height;
+                height = tmp;
+
+                tmp = externalWidth;
+                externalWidth = externalHeight;
+                externalHeight = externalWidth;
+            }
             changed = true;
             mLocked.displayWidth = width;
             mLocked.displayHeight = height;
@@ -353,6 +371,7 @@ void NativeInputManager::setDisplayOrientation(int32_t displayId, int32_t orient
     if (displayId == 0) {
         AutoMutex _l(mLock);
 
+        orientation = (mLocked.hardwareRotation + orientation) % 4;
         if (mLocked.displayOrientation != orientation) {
             changed = true;
             mLocked.displayOrientation = orientation;

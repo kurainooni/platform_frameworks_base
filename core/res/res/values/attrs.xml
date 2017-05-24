@@ -1530,6 +1530,19 @@
         <enum name="KEYCODE_YEN" value="216" />
         <enum name="KEYCODE_RO" value="217" />
         <enum name="KEYCODE_KANA" value="218" />
+
+        <enum name="KEYCODE_SETTINGSSS" value="221" />
+        <enum name="KEYCODE_EMAIL" value="222" />
+        <enum name="KEYCODE_WIFISETTING" value="223" />
+        <enum name="KEYCODE_ETHERNETSETTING" value="224" />
+        <enum name="KEYCODE_APKINSTALLER" value="225" />
+        <enum name="KEYCODE_RKVIDEOPLAYER" value="226" />
+        <enum name="KEYCODE_GALLERY" value="227" />
+        <enum name="KEYCODE_SCREENSHOT" value="228" />
+        <enum name="KEYCODE_SOUNDRECODER" value="229" />
+        <enum name="KEYCODE_AIRISSUPPORT" value="230" />
+        <enum name="KEYCODE_CALLSOFTKEYBOARD" value="231" />
+        <enum name="KEYCODE_USERKEY01" value="232" />
     </attr>
 
     <!-- ***************************************************************** -->

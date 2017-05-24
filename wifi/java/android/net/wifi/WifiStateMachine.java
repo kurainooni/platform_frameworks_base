@@ -1667,7 +1667,8 @@ public class WifiStateMachine extends StateMachine {
         mWifiInfo.setBSSID(null);
         mWifiInfo.setSSID(null);
         mWifiInfo.setNetworkId(WifiConfiguration.INVALID_NETWORK_ID);
-        mWifiInfo.setRssi(MIN_RSSI);
+        //fix Settings wifi's rssi display skipping while connect to a AP .(gwl)
+		//mWifiInfo.setRssi(MIN_RSSI);
         mWifiInfo.setLinkSpeed(-1);
         mWifiInfo.setMeteredHint(false);
 
@@ -2017,7 +2018,8 @@ public class WifiStateMachine extends StateMachine {
                         loge("Failed to load driver!");
                         switch(message.arg1) {
                             case WIFI_STATE_ENABLING:
-                                setWifiState(WIFI_STATE_UNKNOWN);
+                                //setWifiState(WIFI_STATE_UNKNOWN);
+				setWifiState(WIFI_STATE_DISABLED);
                                 break;
                             case WIFI_AP_STATE_ENABLING:
                                 setWifiApState(WIFI_AP_STATE_FAILED);
@@ -2077,12 +2079,12 @@ public class WifiStateMachine extends StateMachine {
                     transitionTo(mDriverUnloadingState);
                     break;
                 case CMD_START_SUPPLICANT:
-                    try {
+                    /*try {
                         mNwService.wifiFirmwareReload(mInterfaceName, "STA");
                     } catch (Exception e) {
                         loge("Failed to reload STA firmware " + e);
                         // continue
-                    }
+                    }*/
                    try {
                        //A runtime crash can leave the interface up and
                        //this affects connectivity when supplicant starts up.
@@ -3121,7 +3123,7 @@ public class WifiStateMachine extends StateMachine {
                 case WifiMonitor.NETWORK_CONNECTION_EVENT:
                     break;
                 case CMD_RSSI_POLL:
-                    if (message.arg1 == mRssiPollToken) {
+                    if (true) {//message.arg1 == mRssiPollToken) {
                         // Get Info and continue polling
                         fetchRssiAndLinkSpeedNative();
                         sendMessageDelayed(obtainMessage(CMD_RSSI_POLL,

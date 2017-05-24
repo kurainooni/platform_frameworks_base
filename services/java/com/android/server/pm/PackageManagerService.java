@@ -878,6 +878,7 @@ public class PackageManagerService extends IPackageManager.Stub {
         mSettings.addSharedUserLPw("android.uid.system",
                 Process.SYSTEM_UID, ApplicationInfo.FLAG_SYSTEM);
         mSettings.addSharedUserLPw("android.uid.phone", RADIO_UID, ApplicationInfo.FLAG_SYSTEM);
+	    mSettings.addSharedUserLPw("android.uid.media",    Process.MEDIA_UID, ApplicationInfo.FLAG_SYSTEM);
         mSettings.addSharedUserLPw("android.uid.log", LOG_UID, ApplicationInfo.FLAG_SYSTEM);
         mSettings.addSharedUserLPw("android.uid.nfc", NFC_UID, ApplicationInfo.FLAG_SYSTEM);
 
@@ -2317,6 +2318,31 @@ public class PackageManagerService extends IPackageManager.Stub {
         return chooseBestActivity(intent, resolvedType, flags, query, userId);
     }
 
+		//GYQ
+		private ResolveInfo checkDefaultActivity(Intent intent, String resolvedType,
+		                                           int flags, List<ResolveInfo> query) {
+		
+		Log.v(TAG, "------------GYQ:::::resolvedType====" + resolvedType);//gyq
+		
+		        int size = query.size();
+		        for(int j=0; j<size; j++) {
+		             final ResolveInfo ri = query.get(j);  
+		             Log.v(TAG, "------checkDefaultActivity-- index=" + j);          
+		             Log.v(TAG, "------checkDefaultActivity-- packageName=" + ri.activityInfo.applicationInfo.packageName);
+		             Log.v(TAG, "------checkDefaultActivity-- activityInfoname=" + ri.activityInfo.name);           
+		             if (!ri.activityInfo.applicationInfo.packageName.equals("cn.wps.moffice_i18n")) {//安装程序包名
+		                 continue;
+		         		 }
+		             if (!ri.activityInfo.name.equals("cn.wps.moffice.documentmanager.PreStartActivity")) {//安装程序包主窗口名
+		                 continue;
+		             }  
+		             return ri;         
+		        }                           	
+		
+		        return null;                                	
+		    }
+		//
+
     private ResolveInfo chooseBestActivity(Intent intent, String resolvedType,
             int flags, List<ResolveInfo> query, int userId) {
         if (query != null) {
@@ -2324,6 +2350,20 @@ public class PackageManagerService extends IPackageManager.Stub {
             if (N == 1) {
                 return query.get(0);
             } else if (N > 1) {
+//GYQ
+             if (resolvedType != null) {
+               if (resolvedType.equals("application/pdf") ||
+               resolvedType.equals("application/msword") ||
+               resolvedType.equals("application/vnd.ms-excel") ||
+               resolvedType.equals("application/mspowerpoint") ||
+               resolvedType.equals("application/epub+zip")) {
+            	   ResolveInfo defaultRi = checkDefaultActivity(intent,resolvedType,flags,query);
+        				 if(defaultRi != null) {
+                     return defaultRi;
+                 }
+               }
+             }
+//
                 // If there is more than one activity with the same priority,
                 // then let the user decide between them.
                 ResolveInfo r0 = query.get(0);
@@ -3122,7 +3162,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                 // The path has changed from what was last scanned...  check the
                 // version of the new path against what we have stored to determine
                 // what to do.
-                if (pkg.mVersionCode < ps.versionCode) {
+                if (pkg.mVersionCode <= ps.versionCode) {
                     // The system package has been updated and the code path does not match
                     // Ignore entry. Skip it.
                     Log.i(TAG, "Package " + ps.name + " at " + scanFile
@@ -6529,6 +6569,8 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     private boolean isAsecExternal(String cid) {
         final String asecPath = PackageHelper.getSdFilesystem(cid);
+		if(asecPath == null)
+			return false;
         return !asecPath.startsWith(mAsecInternalPath);
     }
 
@@ -8448,6 +8490,8 @@ public class PackageManagerService extends IPackageManager.Stub {
 
         public static final int DUMP_PREFERRED_XML = 1 << 10;
 
+        public static final int DUMP_HARDWARE_ACC = 1 << 11;
+
         public static final int OPTION_SHOW_FILTERS = 1 << 0;
 
         private int mTypes;
@@ -8543,6 +8587,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                 pw.println("    s[hared-users]: dump shared user IDs");
                 pw.println("    m[essages]: print collected runtime messages");
                 pw.println("    v[erifiers]: print package verifier info");
+                pw.println("    hwacc: print package hardware accelerate info");
                 pw.println("    <package.name>: info about given package");
                 return;
             } else if ("-f".equals(opt)) {
@@ -8581,6 +8626,8 @@ public class PackageManagerService extends IPackageManager.Stub {
                 dumpState.setDump(DumpState.DUMP_MESSAGES);
             } else if ("v".equals(cmd) || "verifiers".equals(cmd)) {
                 dumpState.setDump(DumpState.DUMP_VERIFIERS);
+            } else if ("hwacc".equals(cmd)) {
+                dumpState.setDump(DumpState.DUMP_HARDWARE_ACC); 
             }
         }
 
@@ -8720,6 +8767,10 @@ public class PackageManagerService extends IPackageManager.Stub {
                 mSettings.dumpSharedUsersLPr(pw, packageName, dumpState);
             }
 
+            if (dumpState.isDumping(DumpState.DUMP_HARDWARE_ACC) && packageName == null) {
+                mSettings.dumphardwareAccPackage(pw, dumpState);
+            }
+
             if (dumpState.isDumping(DumpState.DUMP_MESSAGES) && packageName == null) {
                 if (dumpState.onTitlePrinted())
                     pw.println(" ");
@@ -8807,7 +8858,8 @@ public class PackageManagerService extends IPackageManager.Stub {
     /*
      * Update media status on PackageManager.
      */
-    public void updateExternalMediaStatus(final boolean mediaStatus, final boolean reportStatus) {
+//    public void updateExternalMediaStatus(final boolean mediaStatus, final boolean reportStatus) {
+    public void updateExternalMediaStatus(final String path,final boolean mediaStatus, final boolean reportStatus) {
         int callingUid = Binder.getCallingUid();
         if (callingUid != 0 && callingUid != Process.SYSTEM_UID) {
             throw new SecurityException("Media status can only be updated by the system");
@@ -8815,7 +8867,8 @@ public class PackageManagerService extends IPackageManager.Stub {
         // reader; this apparently protects mMediaMounted, but should probably
         // be a different lock in that case.
         synchronized (mPackages) {
-            Log.i(TAG, "Updating external media status from "
+//            Log.i(TAG, "Updating external media status from "
+            Log.i(TAG, path+"Updating external media status from "
                     + (mMediaMounted ? "mounted" : "unmounted") + " to "
                     + (mediaStatus ? "mounted" : "unmounted"));
             if (DEBUG_SD_INSTALL)
@@ -8831,12 +8884,20 @@ public class PackageManagerService extends IPackageManager.Stub {
         }
         // Queue up an async operation since the package installation may take a
         // little while.
-        mHandler.post(new Runnable() {
-            public void run() {
-                updateExternalMediaStatusInner(mediaStatus, reportStatus);
-            }
-        });
-    }
+//        mHandler.post(new Runnable() {
+        Log.i(TAG,path.equals(Environment.getExternalStorageDirectory().getPath())+"---------------------------------------------"+ Environment.getExternalStorageDirectory().getPath());
+        if(path.equals(Environment.getExternalStorageDirectory().getPath())){
+	          mHandler.post(new Runnable() {
+	            public void run() {
+	                updateExternalMediaStatusInner(mediaStatus, reportStatus);
+	            }
+	        	});
+    		}else{
+	   				final Message msg = mHandler.obtainMessage(UPDATED_MEDIA_STATUS, reportStatus ? 1
+                       : 0, -1);
+            mHandler.sendMessage(msg); 
+				}
+		}
 
     /**
      * Called by MountService when the initial ASECs to scan are available.
@@ -9349,6 +9410,10 @@ public class PackageManagerService extends IPackageManager.Stub {
                     synchronized (mInstallLock) {
                         mp.srcArgs.doPostDeleteLI(true);
                     }
+                    //patch
+                    File nativelifile = new File(mp.targetArgs.getNativeLibraryPath());//gyq: apk move to sd card patch+
+                    nativelifile.setReadable(true,false);
+                    nativelifile.setExecutable(true,false);
                 }
 
                 // Allow more operations on this file if we didn't fail because
@@ -9528,5 +9593,42 @@ public class PackageManagerService extends IPackageManager.Stub {
         } finally {
             Binder.restoreCallingIdentity(token);
         }
+    }
+
+    /*
+     * @hide
+     */
+    public int getPackageHardwareAccMode(String pkgName) {
+        for (int i=0; i<mSettings.mHardwareAccPackages.size(); i++) {
+            if (pkgName.toLowerCase().equals(mSettings.mHardwareAccPackages.get(i).name.toLowerCase())) {
+                return mSettings.mHardwareAccPackages.get(i).mode | PackageManager.HARDWARE_ACC_FLAG_ASSIGNED;
+            }
+        }
+
+        for (int i=0; i<mSettings.mHardwareAccPackages.size(); i++) {
+            if (pkgName.toLowerCase().contains(mSettings.mHardwareAccPackages.get(i).name.toLowerCase())) {
+                return mSettings.mHardwareAccPackages.get(i).mode | PackageManager.HARDWARE_ACC_FLAG_ASSIGNED;
+            }
+        }
+        return PackageManager.HARDWARE_ACC_MODE_UNKNOWN;
+    }
+
+    /*
+     * @hide
+     */
+    public void setPackageHardwareAccMode(String pkgName, int mode) {
+        HardwareAccSetting pkgHAS = null;
+        for (int i=0; i<mSettings.mHardwareAccPackages.size(); i++) {
+            if (mSettings.mHardwareAccPackages.get(i).name.equals(pkgName)) {
+                pkgHAS = mSettings.mHardwareAccPackages.get(i);
+            }
+        }
+        if (pkgHAS != null) {
+            pkgHAS.setMode(mode);
+        } else {
+            pkgHAS = new HardwareAccSetting(pkgName, mode);
+            mSettings.mHardwareAccPackages.add(0, pkgHAS);
+        }
+        mSettings.writeLPr();
     }
 }

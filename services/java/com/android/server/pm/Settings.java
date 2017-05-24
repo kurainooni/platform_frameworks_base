@@ -157,6 +157,9 @@ final class Settings {
     // names.  The packages appear everwhere else under their original
     // names.
     final HashMap<String, String> mRenamedPackages = new HashMap<String, String>();
+
+    // Packages that define hardware accelerate mode.
+    final ArrayList<HardwareAccSetting>  mHardwareAccPackages = new ArrayList<HardwareAccSetting>();
     
     final StringBuilder mReadMessages = new StringBuilder();
 
@@ -176,6 +179,7 @@ final class Settings {
 
     Settings(File dataDir) {
         mSystemDir = new File(dataDir, "system");
+        File configureDir = Environment.getRootDirectory();
         mSystemDir.mkdirs();
         FileUtils.setPermissions(mSystemDir.toString(),
                 FileUtils.S_IRWXU|FileUtils.S_IRWXG
@@ -187,6 +191,42 @@ final class Settings {
         // Deprecated: Needed for migration
         mStoppedPackagesFilename = new File(mSystemDir, "packages-stopped.xml");
         mBackupStoppedPackagesFilename = new File(mSystemDir, "packages-stopped-backup.xml");
+        File hardwareAccInfoDir = new File(configureDir, "etc/performance_info.xml");
+
+        // initialize packages define hardware accelerate mode
+        boolean needRebuild = mSettingsFilename.exists() && hardwareAccInfoDir.exists()? false : true;
+
+        if (needRebuild) {
+            try {
+                FileInputStream stream = new FileInputStream(hardwareAccInfoDir);
+                XmlPullParser parser = Xml.newPullParser();
+                parser.setInput(stream, null);
+    
+                int type;
+                do {
+                    type = parser.next();
+                    if (type == XmlPullParser.START_TAG) {
+                        String tag = parser.getName();
+                        if ("app".equals(tag)) {
+                            String pkgName = parser.getAttributeValue(null, "package");
+                            String pkgMode = parser.getAttributeValue(null, "mode");
+                            HardwareAccSetting pkgHAS = new HardwareAccSetting(pkgName, Integer.valueOf(pkgMode));
+                            mHardwareAccPackages.add(pkgHAS);
+                        }
+                    }
+                } while (type != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "failed parsing " + hardwareAccInfoDir, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "failed parsing " + hardwareAccInfoDir, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "failed parsing " + hardwareAccInfoDir, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "failed parsing " + hardwareAccInfoDir, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "failed parsing " + hardwareAccInfoDir, e);
+            }
+        }
     }
 
     PackageSetting getPackageLPw(PackageParser.Package pkg, PackageSetting origPackage,
@@ -1208,6 +1248,17 @@ final class Settings {
                     serializer.endTag(null, "renamed-package");
                 }
             }
+
+            if (mHardwareAccPackages.size() > 0) {
+                serializer.startTag(null, "hardwareAcc-package");
+                for (int j = 0; j < mHardwareAccPackages.size(); j++) {
+                    serializer.startTag(null, "app");
+                    serializer.attribute(null, "package", mHardwareAccPackages.get(j).name);
+                    serializer.attribute(null, "mode", String.valueOf(mHardwareAccPackages.get(j).mode));
+                    serializer.endTag(null, "app");
+                }
+                serializer.endTag(null, "hardwareAcc-package");
+            }
             
             serializer.endTag(null, "packages");
 
@@ -1538,6 +1589,8 @@ final class Settings {
                     if (nname != null && oname != null) {
                         mRenamedPackages.put(nname, oname);
                     }
+                } else if (tagName.equals("hardwareAcc-package")) {
+                    readHardwareAccPackageLP(parser);
                 } else if (tagName.equals("last-platform-version")) {
                     mInternalSdkPlatform = mExternalSdkPlatform = 0;
                     try {
@@ -2234,6 +2287,31 @@ final class Settings {
         }
     }
 
+    private void readHardwareAccPackageLP(XmlPullParser parser)
+            throws XmlPullParserException, IOException {
+        int outerDepth = parser.getDepth();
+        int type;
+        while ((type=parser.next()) != XmlPullParser.END_DOCUMENT
+               && (type != XmlPullParser.END_TAG
+                       || parser.getDepth() > outerDepth)) {
+            if (type == XmlPullParser.END_TAG
+                    || type == XmlPullParser.TEXT) {
+                continue;
+            }
+
+            String tagName = parser.getName();
+            if (tagName.equals("app")) {
+                String pkgName = parser.getAttributeValue(null, "package");
+                String pkgMode = parser.getAttributeValue(null, "mode");
+                HardwareAccSetting pkgHAS = new HardwareAccSetting(pkgName, Integer.valueOf(pkgMode));
+
+                if (pkgName != null) {
+                    mHardwareAccPackages.add(pkgHAS);
+                }
+            }
+        }
+    }
+
     void removeUserLPr(int userId) {
         File file = getUserPackagesStateFile(userId);
         file.delete();
@@ -2670,6 +2748,20 @@ final class Settings {
                 pw.println(s);
             }
         }
+    }
+
+    void dumphardwareAccPackage(PrintWriter pw, DumpState dumpState) {
+        pw.println(" ");
+        pw.println("Hardware accelerated messages:");
+        if (!mHardwareAccPackages.isEmpty()) {
+            for (HardwareAccSetting c : mHardwareAccPackages) {
+                pw.print("      ");
+                pw.print(c.name);
+                pw.print(" -> ");
+                pw.println(c.mode);
+            }
+        }
+
     }
 
     void dumpReadMessagesLPr(PrintWriter pw, DumpState dumpState) {

@@ -212,6 +212,14 @@ public class CompatibilityInfo implements Parcelable {
                         compatFlags |= NEVER_NEEDS_COMPAT;
                     }
                     break;
+		case Configuration.SCREENLAYOUT_SIZE_NORMAL:
+                    if ((sizeInfo&LARGE_SCREENS) != 0) {
+                        compatFlags &= ~NEEDS_SCREEN_COMPAT;
+                    }
+                    if ((appInfo.flags & ApplicationInfo.FLAG_SUPPORTS_NORMAL_SCREENS) != 0) {
+                        compatFlags |= NEVER_NEEDS_COMPAT;
+                    }
+                    break;
             }
 
             if ((screenLayout&Configuration.SCREENLAYOUT_COMPAT_NEEDED) != 0) {

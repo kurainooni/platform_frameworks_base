@@ -36,6 +36,17 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+
+import android.os.SystemClock;
+import static android.provider.Settings.System.SCREEN_OFF_TIMEOUT;
+import android.provider.Settings;
+import android.content.ContentResolver;
+import java.io.RandomAccessFile;
+import static android.provider.Settings.System.HDMI_LCD_TIMEOUT;
+import android.os.SystemProperties;
 /**
  * <p>WiredAccessoryObserver monitors for a wired headset on the main board or dock.
  */
@@ -51,6 +62,7 @@ class WiredAccessoryObserver extends UEventObserver {
                                                    BIT_USB_HEADSET_ANLG|BIT_USB_HEADSET_DGTL|
                                                    BIT_HDMI_AUDIO);
     private static final int HEADSETS_WITH_MIC = BIT_HEADSET;
+    private int TIMEOUT=-1;    
 
     private static class UEventInfo {
         private final String mDevName;
@@ -129,7 +141,7 @@ class WiredAccessoryObserver extends UEventObserver {
 
         return retVal;
     }
-
+    private PowerManager pm;
     private static List<UEventInfo> uEventInfo = makeObservedUEventList();
 
     private int mHeadsetState;
@@ -143,7 +155,7 @@ class WiredAccessoryObserver extends UEventObserver {
 
     public WiredAccessoryObserver(Context context) {
         mContext = context;
-        PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+        pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WiredAccessoryObserver");
         mWakeLock.setReferenceCounted(false);
         mAudioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
@@ -166,10 +178,53 @@ class WiredAccessoryObserver extends UEventObserver {
       }
     }
 
+    private File HdmiState  = new File("/sys/class/hdmi/hdmi-0/state");
+
+    public boolean isHdmiConnected(File file){
+                boolean isConnected = false;
+                if (file.exists()){
+                    try {
+                          FileReader       fread = new FileReader(file);
+                          BufferedReader   buffer = new BufferedReader(fread);
+                          String           strPlug = "plug=1";
+                          String           str = null;
+
+                          while ((str = buffer.readLine()) != null){
+                            int length = str.length();
+                            if((length == 6) && (str.equals(strPlug))){
+                                isConnected = true;
+                                break;
+                            }
+                            else{
+                                isConnected = false;
+                            }
+                          }
+                    } catch (IOException e){
+                        Log.e(TAG, "IO Exception");
+                    }
+                }
+                return isConnected;
+            }
+
+    public static final String ACTION_HDMI_AUDIO_PLUG = "android.intent.action.HDMI_AUDIO_PLUG";
+
     @Override
     public void onUEvent(UEventObserver.UEvent event) {
-        if (LOG) Slog.v(TAG, "Headset UEVENT: " + event.toString());
-
+        //if (LOG) Slog.v(TAG, "Headset UEVENT: " + event.toString());
+        if (true) Log.d(TAG, "Headset UEVENT: " + event.toString());
+        //pm.userActivity(SystemClock.uptimeMillis(), true);
+        if(isHdmiConnected(HdmiState)){
+             Intent intent = new Intent(ACTION_HDMI_AUDIO_PLUG);
+             intent.putExtra("state", 1);
+             intent.putExtra("name", "hdmi");
+             mContext.sendBroadcast(intent);
+        }else{
+             Intent intent = new Intent(ACTION_HDMI_AUDIO_PLUG);
+             intent.putExtra("state", 0);
+             intent.putExtra("name", "hdmi");
+             mContext.sendBroadcast(intent);
+        }
+        
         try {
             String devPath = event.get("DEVPATH");
             String name = event.get("SWITCH_NAME");
@@ -303,9 +358,59 @@ class WiredAccessoryObserver extends UEventObserver {
 
             if (LOG)
                 Slog.v(TAG, "device "+headsetName+((state == 1) ? " connected" : " disconnected"));
-
+            if(headsetName.equals("hdmi")&&state==1){
+                   TIMEOUT=Settings.System.getInt(mContext.getContentResolver(),SCREEN_OFF_TIMEOUT,-1);
+                   Settings.System.putInt(mContext.getContentResolver(),SCREEN_OFF_TIMEOUT, -1);
+                   Settings.System.putInt(mContext.getContentResolver(), Settings.System.HDMI_LCD_TIMEOUT, -1);
+                   //pm.userActivity(SystemClock.uptimeMillis(), true); 
+		   SetTouchScale();
+                   Log.d(TAG,"---dzy hdmi connect screen_off_timeout=-1");
+                }else if(headsetName.equals("hdmi")&&state==0){
+                   Log.d(TAG,"---dzy hdmi disconnect screen_off_timeout="+String.valueOf(TIMEOUT));
+                   TurnonScreen("0"); 
+                   SystemProperties.set("sys.hdmi_screen.scale",String.valueOf((char)100));
+                   Settings.System.putInt(mContext.getContentResolver(),SCREEN_OFF_TIMEOUT, TIMEOUT);
+                }
             mAudioManager.setWiredDeviceConnectionState(device, state, headsetName);
         }
+    }
+    private void TurnonScreen(String str){
+        Log.d("dzy","WIRE TurnOnScreen"+String.valueOf(str));
+                //boolean ff = SystemProperties.getBoolean("persist.sys.hdmi_screen", false);
+                ContentResolver resolver = mContext.getContentResolver();
+                final long currentTimeout = Settings.System.getLong(resolver, HDMI_LCD_TIMEOUT,
+                -1);
+          
+		File HdmiFile = new File("/sys/class/graphics/fb0/blank");
+
+		try {
+			Log.d("dzy","turn on screen");
+			RandomAccessFile rdf = null;
+			rdf = new RandomAccessFile(HdmiFile, "rw");
+			rdf.writeBytes(str);
+		} catch (IOException re) {
+			Log.e(TAG, "IO Exception");
+		}
+              
+
+    }
+
+  private void SetTouchScale(){
+
+		File HdmiScaleFile = new File("/sys/class/display/HDMI/scale");
+		try {
+			byte[] buf = new byte[20];
+			int len = 0;
+			int scale = 0;
+			RandomAccessFile rdf = new RandomAccessFile(HdmiScaleFile, "r");
+			len = rdf.read(buf);
+			String scaleStr = new String(buf,0,len);
+			String[] items = scaleStr.split(" ");
+			scale = Integer.valueOf(items[0].substring(items[0].indexOf("=") + 1));
+                   	SystemProperties.set("sys.hdmi_screen.scale",String.valueOf((char)scale));
+		} catch (IOException re) {
+			Log.e(TAG, "IO Exception");
+		}
     }
 
     private final Handler mHandler = new Handler() {

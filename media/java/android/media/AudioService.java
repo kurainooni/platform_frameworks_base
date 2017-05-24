@@ -565,7 +565,6 @@ public class AudioService extends IAudioService.Stub implements OnFinished {
         }
     }
 
-
     private void updateStreamVolumeAlias(boolean updateVolumes) {
         int dtmfStreamAlias;
         if (mVoiceCapable) {
@@ -2855,6 +2854,12 @@ public class AudioService extends IAudioService.Stub implements OnFinished {
                 System.putInt(mContentResolver,
                           streamState.getSettingNameForDevice(false /* lastAudible */, device),
                           (streamState.getIndex(device, false /* lastAudible */) + 5)/ 10);
+
+                //add by cjf
+                System.putInt(mContentResolver, /* see createStreamStates */
+                          System.VOLUME_SETTINGS[mStreamVolumeAlias[streamState.getStreamType()]],
+                          (streamState.getIndex(device, false /* lastAudible */) + 5)/ 10);
+
             }
             if ((persistType & PERSIST_LAST_AUDIBLE) != 0) {
                 System.putInt(mContentResolver,

@@ -676,6 +676,29 @@ static void Surface_unfreeze(
         doThrowIAE(env);
     }
 }
+//>>>add by rk
+static void Surface_setInvisiableRegionScreen(JNIEnv* env, jobject clazz, jobject argRegion){
+       const sp<SurfaceControl>& surface(getSurfaceControl(env, clazz));
+    if (surface == 0) return;
+       SkRegion* nativeRegion = (SkRegion*)env->GetIntField(argRegion, no.native_region);
+
+    const SkIRect& b(nativeRegion->getBounds());
+    Region reg(Rect(b.fLeft, b.fTop, b.fRight, b.fBottom));
+    if (nativeRegion->isComplex()) {
+        SkRegion::Iterator it(*nativeRegion);
+        while (!it.done()) {
+            const SkIRect& r(it.rect());
+            reg.addRectUnchecked(r.fLeft, r.fTop, r.fRight, r.fBottom);
+            it.next();
+        }
+    }
+    //ALOGD("+++++++++++++++++b.fLeft=%d, b.fTop=%d, b.fRight=%d, b.fBottom=%d",b.fLeft, b.fTop, b.fRight, b.fBottom);
+    status_t err = surface->setInvisiableRegionScreenHint(reg);
+    if (err<0 && err!=NO_INIT) {
+        doThrowIAE(env);
+    }
+}
+//<<<<<<
 
 static void Surface_setFlags(
         JNIEnv* env, jobject clazz, jint flags, jint mask)
@@ -905,6 +928,7 @@ static JNINativeMethod gSurfaceMethods[] = {
     {"unfreeze",            "()V",  (void*)Surface_unfreeze },
     {"setFlags",            "(II)V",(void*)Surface_setFlags },
     {"setTransparentRegionHint","(Landroid/graphics/Region;)V", (void*)Surface_setTransparentRegion },
+     {"setInvisiableRegionScreenHint",  "(Landroid/graphics/Region;)V", (void*)Surface_setInvisiableRegionScreen },//rk add
     {"setAlpha",            "(F)V", (void*)Surface_setAlpha },
     {"setMatrix",           "(FFFF)V",  (void*)Surface_setMatrix },
     {"setFreezeTint",       "(I)V",  (void*)Surface_setFreezeTint },

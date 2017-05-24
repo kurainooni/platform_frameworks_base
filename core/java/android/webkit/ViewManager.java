@@ -21,6 +21,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsoluteLayout;
+import android.graphics.Region;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -35,7 +37,7 @@ class ViewManager {
     private final int MAX_SURFACE_AREA;
     // GPU Limit (hard coded for now)
     private static final int MAX_SURFACE_DIMENSION = 2048;
-
+    
     class ChildView {
         int x;
         int y;
@@ -114,6 +116,63 @@ class ViewManager {
         return new ChildView();
     }
 
+   //>>>>>>add by rk
+private Region preTransparentRegion = new Region();
+private Region curTransparentRegion = null;
+
+/**
+ * rk add TODO
+ * @hide
+ */
+public void requestLayoutSurfaceViews(View addressBar){
+ 	if (mChildren.isEmpty() || mWebView == null || mWebView.getWebView() == null) {
+               return;
+        }
+	final Region region = new Region();
+	int[] location = new int[2];
+	mWebView.getWebView().getLocationOnScreen(location);
+	if(addressBar != null && addressBar.getVisibility() != View.GONE){
+		int[] addressBarLocation = new int[2];
+		addressBar.getLocationOnScreen(addressBarLocation);//get addressBar location
+		int r = location[0]+mWebView.getWidth();
+		int b = location[1];
+		if(r > addressBarLocation[0]+addressBar.getWidth()){
+			r = addressBarLocation[0]+addressBar.getWidth();
+		}
+		if(b < addressBarLocation[1]+addressBar.getHeight()){
+			b = addressBarLocation[1]+addressBar.getHeight();
+		}
+		region.set(0,0, r, b);
+	}else{
+		region.set(0,0, location[0]+mWebView.getWidth(), location[1]);
+	}
+	if(curTransparentRegion != null){
+		preTransparentRegion.set(curTransparentRegion);
+	}
+	curTransparentRegion = region;
+	/*if(curTransparentRegion.equals(preTransparentRegion)){
+		//Log.i("wh", "requestLayoutSurfaceViews region equals pre");
+		return;
+	}*/
+	for (ChildView v : mChildren) {
+           View view = v.mView;
+		if(view instanceof SurfaceView){
+			((SurfaceView)view).changeTransparentRegionInScreen(region);
+		}
+       }
+}
+
+public void forceUpdateWindow()
+{
+    for (ChildView v : mChildren) {
+           View view = v.mView;
+		if(view instanceof SurfaceView){
+			((SurfaceView)view).forceUpdateWindow();
+		}
+       }
+}
+//<<<<<<<<<<<<<
+
     /**
      * This should only be called from the UI thread.
      */
@@ -143,7 +202,9 @@ class ViewManager {
         if(v.mView instanceof SurfaceView) {
 
             final SurfaceView sView = (SurfaceView) v.mView;
-
+	    //>>>>>>>>>>>>>>>add by rk
+            sView.setTransparentRegionInScreen(curTransparentRegion);
+	   //<<<<<<<<<<
             if (sView.isFixedSize() && mZoomInProgress) {
                 /* If we're already fixed, and we're in a zoom, then do nothing
                    about the size. Just wait until we get called at the end of

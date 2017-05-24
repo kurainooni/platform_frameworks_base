@@ -41,6 +41,7 @@ public class NativeDaemonConnectorException extends Exception {
     }
 
     public int getCode() {
+	if(mEvent == null) return 0;//add lly by null event
         return mEvent.getCode();
     }
 

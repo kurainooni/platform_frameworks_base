@@ -45,4 +45,5 @@ class DebugFlags {
     public static final boolean WEB_VIEW = false;
     public static final boolean WEB_VIEW_CORE = false;
     public static final boolean MEASURE_PAGE_SWAP_FPS = false;
+	public static final boolean WEB_HTML5 = true;
 }

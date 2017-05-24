@@ -169,6 +169,17 @@ int OpenGLRenderer::prepare(bool opaque) {
 }
 
 int OpenGLRenderer::prepareDirty(float left, float top, float right, float bottom, bool opaque) {
+    #ifdef TARGET_RK2918
+    if ( ((int)right - (int)left) % 16 ){
+		//29GPU hack: set scissor width align 16 and height align 4 , to avoid performance decreased for glClear by software.
+        left = 0;
+		right = mWidth;
+    } 
+    if ( ((int)bottom - (int)top) % 4) {
+		top = 0;
+		bottom = mHeight;
+    }
+    #endif
     mCaches.clearGarbage();
 
     mSnapshot = new Snapshot(mFirstSnapshot,

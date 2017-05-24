@@ -2306,6 +2306,10 @@ public class View implements Drawable.Callback, Drawable.Callback2, KeyEvent.Cal
      * @see #setSystemUiVisibility(int)
      */
     public static final int SYSTEM_UI_FLAG_HIDE_NAVIGATION = 0x00000002;
+    /**
+     * @hide
+     */
+    public static final int SYSTEM_UI_FLAG_SHOW_FULLSCREEN = 0x00000008;
 
     /**
      * Flag for {@link #setSystemUiVisibility(int)}: View has requested to go
@@ -11732,7 +11736,21 @@ public class View implements Drawable.Callback, Drawable.Callback2, KeyEvent.Cal
     /*package*/ IWindowSession getWindowSession() {
         return mAttachInfo != null ? mAttachInfo.mSession : null;
     }
-
+	/**
+	* add by fjz
+	*@hide
+	*/
+	public IWindowSession getRootWindowSession(){
+		Log.d("fjz---->","getRootWindowSession");
+		return mAttachInfo != null ? mAttachInfo.mSession : null;
+	}
+	/**
+	* add by fjz
+	* @hide
+	*/
+	public IWindow getWindow(){
+		return mAttachInfo != null ? mAttachInfo.mWindow : null;
+	}
     /**
      * @param info the {@link android.view.View.AttachInfo} to associated with
      *        this view

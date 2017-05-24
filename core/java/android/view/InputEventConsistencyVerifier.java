@@ -18,7 +18,6 @@ package android.view;
 
 import android.os.Build;
 import android.util.Log;
-
 /**
  * Checks whether a sequence of input events is self-consistent.
  * Logs a description of each problem detected.
@@ -616,7 +615,7 @@ public final class InputEventConsistencyVerifier {
                     }
                 }
 
-                Log.d(mLogTag, mViolationMessage.toString());
+                //Log.d(mLogTag, mViolationMessage.toString());
 
                 // Taint the event so that we do not generate additional violations from it
                 // further downstream.

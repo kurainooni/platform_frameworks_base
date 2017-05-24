@@ -623,6 +623,19 @@ public class KeyEvent extends InputEvent implements Parcelable {
     /** Key code constant: Assist key.
      * Launches the global assist activity.  Not delivered to applications. */
     public static final int KEYCODE_ASSIST          = 219;
+//gyq
+    public static final int KEYCODE_SETTINGSSS      = 221;
+    public static final int KEYCODE_EMAIL           = 222;
+    public static final int KEYCODE_WIFISETTING     = 223;
+    public static final int KEYCODE_ETHERNETSETTING = 224;
+    public static final int KEYCODE_APKINSTALLER    = 225;
+    public static final int KEYCODE_RKVIDEOPLAYER   = 226;
+    public static final int KEYCODE_GALLERY         = 227;
+    public static final int KEYCODE_SCREENSHOT      = 228;
+    public static final int KEYCODE_SOUNDRECODER      = 229;
+    public static final int KEYCODE_AIRISSUPPORT      = 230;
+    public static final int KEYCODE_CALLSOFTKEYBOARD  = 231;
+    public static final int KEYCODE_USERKEY01  = 232;        
 
     private static final int LAST_KEYCODE           = KEYCODE_ASSIST;
 
@@ -866,6 +879,19 @@ public class KeyEvent extends InputEvent implements Parcelable {
         names.append(KEYCODE_RO, "KEYCODE_RO");
         names.append(KEYCODE_KANA, "KEYCODE_KANA");
         names.append(KEYCODE_ASSIST, "KEYCODE_ASSIST");
+        
+        names.append(KEYCODE_SETTINGSSS, "KEYCODE_SETTINGSSS");
+        names.append(KEYCODE_EMAIL, "KEYCODE_EMAIL");
+        names.append(KEYCODE_WIFISETTING, "KEYCODE_WIFISETTING");
+        names.append(KEYCODE_ETHERNETSETTING, "KEYCODE_ETHERNETSETTING");
+        names.append(KEYCODE_APKINSTALLER, "KEYCODE_APKINSTALLER");
+        names.append(KEYCODE_RKVIDEOPLAYER, "KEYCODE_RKVIDEOPLAYER");
+        names.append(KEYCODE_GALLERY, "KEYCODE_GALLERY");
+        names.append(KEYCODE_SCREENSHOT, "KEYCODE_SCREENSHOT");
+        names.append(KEYCODE_SOUNDRECODER, "KEYCODE_SOUNDRECODER");
+        names.append(KEYCODE_AIRISSUPPORT, "KEYCODE_AIRISSUPPORT");
+        names.append(KEYCODE_CALLSOFTKEYBOARD, "KEYCODE_CALLSOFTKEYBOARD");
+        names.append(KEYCODE_USERKEY01, "KEYCODE_USERKEY01");   
     };
 
     // Symbolic names of all metakeys in bit order from least significant to most significant.
@@ -2607,6 +2633,7 @@ public class KeyEvent extends InputEvent implements Parcelable {
                 if (DEBUG) Log.v(TAG, "Key down to " + target + " in " + state
                         + ": " + this);
                 boolean res = receiver.onKeyDown(mKeyCode, this);
+                
                 if (state != null) {
                     if (res && mRepeatCount == 0 && (mFlags&FLAG_START_TRACKING) != 0) {
                         if (DEBUG) Log.v(TAG, "  Start tracking!");

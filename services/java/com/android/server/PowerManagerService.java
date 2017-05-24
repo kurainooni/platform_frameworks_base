@@ -77,6 +77,19 @@ import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import android.os.SystemProperties;
+import android.os.SystemClock;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
+import static android.provider.Settings.System.HDMI_LCD_TIMEOUT;
 public class PowerManagerService extends IPowerManager.Stub
         implements LocalPowerManager, Watchdog.Monitor {
     private static final int NOMINAL_FRAME_TIME_MS = 1000/60;
@@ -315,6 +328,10 @@ public class PowerManagerService extends IPowerManager.Stub
     private static native int nativeSetScreenState(boolean on);
     private static native void nativeShutdown();
     private static native void nativeReboot(String reason) throws IOException;
+    
+    private long lcd_delay_timeout = 10;
+    private Handler mHandler1 = new Handler();
+    private boolean mTimeout=false;
 
     /*
     static PrintStream mLog;
@@ -497,6 +514,8 @@ public class PowerManagerService extends IPowerManager.Stub
 
         public void update(Observable o, Object arg) {
             synchronized (mLocks) {
+                lcd_delay_timeout = getInt(HDMI_LCD_TIMEOUT, 10);
+
                 // STAY_ON_WHILE_PLUGGED_IN, default to when plugged into AC
                 mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
                         BatteryManager.BATTERY_PLUGGED_AC);
@@ -517,6 +536,11 @@ public class PowerManagerService extends IPowerManager.Stub
 
                 // recalculate everything
                 setScreenOffTimeoutsLocked();
+
+                if(isAbleChangeHDMIMode()){
+                   Log.d("dzy","update");
+		   TurnonScreen("1");
+		}
 
                 mWindowScaleAnimation = getFloat(WINDOW_ANIMATION_SCALE, 1.0f);
                 final float transitionScale = getFloat(TRANSITION_ANIMATION_SCALE, 1.0f);
@@ -665,8 +689,9 @@ public class PowerManagerService extends IPowerManager.Stub
                         + Settings.System.NAME + "=?) or ("
                         + Settings.System.NAME + "=?) or ("
                         + Settings.System.NAME + "=?) or ("
+                        + Settings.System.NAME + "=?) or ("
                         + Settings.System.NAME + "=?)",
-                new String[]{STAY_ON_WHILE_PLUGGED_IN, SCREEN_OFF_TIMEOUT, DIM_SCREEN, SCREEN_BRIGHTNESS,
+                new String[]{STAY_ON_WHILE_PLUGGED_IN, SCREEN_OFF_TIMEOUT, DIM_SCREEN, HDMI_LCD_TIMEOUT, SCREEN_BRIGHTNESS,
                         SCREEN_BRIGHTNESS_MODE, /*SCREEN_AUTO_BRIGHTNESS_ADJ,*/
                         WINDOW_ANIMATION_SCALE, TRANSITION_ANIMATION_SCALE},
                 null);
@@ -2477,6 +2502,97 @@ public class PowerManagerService extends IPowerManager.Stub
         }
     }
 
+   private void TurnonScreen(String sighDisplay){
+                
+                Log.d("dzy","TurnOnScreen"+String.valueOf(sighDisplay));
+		//boolean ff = SystemProperties.getBoolean("persist.sys.hdmi_screen", false);
+		ContentResolver resolver = mContext.getContentResolver();
+		final long currentTimeout = Settings.System.getLong(resolver, HDMI_LCD_TIMEOUT,
+                -1);
+		mHandler1.removeCallbacks(mScreenTimeout);
+		
+		if(lcd_delay_timeout != -1){
+                        //Power.setScreenState(true);	
+			File HdmiFile = new File("/sys/class/graphics/fb0/blank");
+			if(mTimeout){
+				try {
+                                        Log.d("dzy","turn on screen");
+					RandomAccessFile rdf = null;
+					rdf = new RandomAccessFile(HdmiFile, "rw");
+					rdf.writeBytes(sighDisplay);
+				} catch (IOException re) {
+					Log.e(TAG, "IO Exception");
+				}
+			}
+                        mTimeout=false;
+			LockScreenOff();
+		}
+		
+		return;
+                
+	}
+    private boolean isAbleChangeHDMIMode(){
+		return HdmiState.exists() && isHdmiConnected(HdmiState) && lcd_delay_timeout != -1 ;							//SystemProperties.get("persist.sys.hdmi_screen", "1") .equals("0") &&							//isHdmiEnableDoubleScreen(fileState);
+	}
+    Runnable mScreenTimeout = new Runnable() {
+               
+	        public void run() {
+	            synchronized (this) {
+                           Log.d("dzy","screen time out");
+		           if(isAbleChangeHDMIMode()){
+                                       
+                                     File HdmiFile = new File("/sys/class/graphics/fb0/blank");
+		       			try {
+							Log.d("dzy"," ----> hdmi_lcd_screen_off");		       				//Turn on the Screen.
+		       				RandomAccessFile rdf = null;
+		       				rdf = new RandomAccessFile(HdmiFile, "rw");
+		       				rdf.writeBytes("1");
+                                                mTimeout=true;
+		       			} catch (IOException re) {
+		       				Log.e(TAG, "IO Exception");
+                                                re.printStackTrace();
+                                                mTimeout=true;
+		       			}
+                                        // mHandler1.removeCallbacks(mScreenTimeout);
+		            }
+	            }
+	        }
+	    };
+		  
+    private void LockScreenOff() {
+    		// mHandler1.removeCallbacks(mScreenTimeout);
+	     //mHandler1.postDelayed(mScreenTimeout, 1000 * lcd_delay_timeout);
+                 Log.d("dzy","LockScreenOff"+String.valueOf(lcd_delay_timeout));
+		 mHandler1.postAtTime(mScreenTimeout, SystemClock.uptimeMillis() + 1000 * lcd_delay_timeout);
+	 }
+    private final File HdmiState = new File("sys/class/display/HDMI/connect");
+    protected  boolean isHdmiConnected(File file){
+	        boolean isConnected = false;
+	        if (file.exists()){
+	            try {
+	                  FileReader fread = new FileReader(file);
+	                  BufferedReader   buffer = new BufferedReader(fread);
+	                  String           strPlug = "plug=1";
+	                  String           str = null;
+	                  while ((str = buffer.readLine()) != null){
+	                    int length = str.length();
+	                    //if((length == 6) && (str.equals(strPlug))){
+	                    if(str.equals("1")){
+                                  isConnected = true;
+	                        break;
+	                    }
+	                    else{
+	                        isConnected = false;
+	                    }
+	                  }
+	            } catch (IOException e){
+	                Log.e(TAG, "IO Exception");
+	            }
+	        }
+	        return isConnected;
+	    }
+
+
     private void forceUserActivityLocked() {
         if (isScreenTurningOffLocked()) {
             // cancel animation so userActivity will succeed
@@ -2526,6 +2642,12 @@ public class PowerManagerService extends IPowerManager.Stub
 
     private void userActivity(long time, long timeoutOverride, boolean noChangeLights,
             int eventType, boolean force, boolean ignoreIfScreenOff) {
+//        Log.d("dzy","userActivity");
+	synchronized (mLocks) {
+		if(isAbleChangeHDMIMode()){
+	         	TurnonScreen("0");
+                  }
+        }
 
         if (((mPokey & POKE_LOCK_IGNORE_TOUCH_EVENTS) != 0) && (eventType == TOUCH_EVENT)) {
             if (false) {

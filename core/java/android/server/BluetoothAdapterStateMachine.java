@@ -125,6 +125,8 @@ final class BluetoothAdapterStateMachine extends StateMachine {
     private static final int TURN_OFF_TIMEOUT = 105;
     // Bluetooth device power off wait timeout happens
     private static final int POWER_DOWN_TIMEOUT = 106;
+    // Bluetooth Powerup timeout happens
+    private static final int POWER_UP_TIMEOUT = 201;
 
     private Context mContext;
     private BluetoothService mBluetoothService;
@@ -150,6 +152,8 @@ final class BluetoothAdapterStateMachine extends StateMachine {
 
     private static final int TURN_OFF_TIMEOUT_TIME = 5000;
     private static final int POWER_DOWN_TIMEOUT_TIME = 20;
+
+    private static final int POWER_UP_TIMEOUT_TIME = 3000;
 
     BluetoothAdapterStateMachine(Context context, BluetoothService bluetoothService,
                                  BluetoothAdapter bluetoothAdapter) {
@@ -187,7 +191,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
         }
         @Override
         public boolean processMessage(Message message) {
-            log("PowerOff process message: " + message.what);
+            log("PowerOff process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch(message.what) {
@@ -242,7 +246,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     perProcessCallback(false, (IBluetoothStateChangeCallback) message.obj);
                     break;
                 case USER_TURN_OFF:
-                    Log.w(TAG, "PowerOff received: " + message.what);
+                    Log.w(TAG, "PowerOff received: " + cmd_to_string(message.what) + "("+message.what+")");
                 case AIRPLANE_MODE_ON: // ignore
                     break;
                 default:
@@ -315,7 +319,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
 
         @Override
         public boolean processMessage(Message message) {
-            log("WarmUp process message: " + message.what);
+            log("WarmUp process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch(message.what) {
@@ -343,7 +347,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     deferMessage(message);
                     break;
                 case USER_TURN_OFF:
-                    Log.w(TAG, "WarmUp received: " + message.what);
+                    Log.w(TAG, "WarmUp received: " + cmd_to_string(message.what) + "("+message.what+")");
                     break;
                 default:
                     return NOT_HANDLED;
@@ -366,7 +370,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
 
         @Override
         public boolean processMessage(Message message) {
-            log("HotOff process message: " + message.what);
+            log("HotOff process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch(message.what) {
@@ -379,6 +383,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     //$FALL-THROUGH$
                 case TURN_ON_CONTINUE:
                     mBluetoothService.switchConnectable(true);
+                    sendMessageDelayed(POWER_UP_TIMEOUT, POWER_UP_TIMEOUT_TIME);
                     transitionTo(mSwitching);
                     break;
                 case AIRPLANE_MODE_ON:
@@ -441,7 +446,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
         }
         @Override
         public boolean processMessage(Message message) {
-            log("Switching process message: " + message.what);
+            log("Switching process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch(message.what) {
@@ -459,6 +464,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     }
                     break;
                 case POWER_STATE_CHANGED:
+					removeMessages(POWER_UP_TIMEOUT);
                     removeMessages(TURN_OFF_TIMEOUT);
                     if (!((Boolean) message.obj)) {
                         if (mPublicState == BluetoothAdapter.STATE_TURNING_OFF) {
@@ -510,6 +516,12 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                         deferMessage(obtainMessage(TURN_HOT));
                     }
                     break;
+                case POWER_UP_TIMEOUT:
+                    log("Power up timeout...");
+                    mBluetoothService.disableNative();
+                    Log.e(TAG, "Devices failed to power up, reseting...");
+                    recoverStateMachine(USER_TURN_ON, false);
+                    break;
                 case USER_TURN_ON:
                 case AIRPLANE_MODE_OFF:
                 case AIRPLANE_MODE_ON:
@@ -534,7 +546,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
         }
         @Override
         public boolean processMessage(Message message) {
-            log("BluetoothOn process message: " + message.what);
+            log("BluetoothOn process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch(message.what) {
@@ -572,7 +584,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     break;
                 case AIRPLANE_MODE_OFF:
                 case USER_TURN_ON:
-                    Log.w(TAG, "BluetoothOn received: " + message.what);
+                    Log.w(TAG, "BluetoothOn received: " + cmd_to_string(message.what) + "("+message.what+")");
                     break;
                 case PER_PROCESS_TURN_ON:
                     perProcessCallback(true, (IBluetoothStateChangeCallback)message.obj);
@@ -615,7 +627,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
 
         @Override
         public boolean processMessage(Message message) {
-            log("PerProcessState process message: " + message.what);
+            log("PerProcessState process message: " + cmd_to_string(message.what) + "("+message.what+")");
 
             boolean retValue = HANDLED;
             switch (message.what) {
@@ -708,7 +720,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     allProcessesCallback(false);
                     break;
                 case USER_TURN_OFF:
-                    Log.w(TAG, "PerProcessState received: " + message.what);
+                    Log.w(TAG, "PerProcessState received: " + cmd_to_string(message.what) + "("+message.what+")");
                     break;
                 default:
                     return NOT_HANDLED;
@@ -814,6 +826,67 @@ final class BluetoothAdapterStateMachine extends StateMachine {
         } else {
             pw.println("ERROR: Bluetooth UNKNOWN STATE ");
         }
+    }
+
+    private String cmd_to_string(int what) {
+        StringBuilder sb = new StringBuilder();
+        switch (what) {
+            case SCAN_MODE_CHANGED:
+                sb.append("SCAN_MODE_CHANGED");
+                break;
+            case POWER_STATE_CHANGED:
+                sb.append("POWER_STATE_CHANGED");
+                break;
+            case POWER_DOWN_TIMEOUT:
+                sb.append("POWER_DOWN_TIMEOUT");
+                break;
+            case TURN_HOT:
+                sb.append("TURN_HOT");
+                break;
+            case TURN_ON_CONTINUE:
+                sb.append("TURN_ON_CONTINUE");
+                break;
+            case TURN_COLD:
+                sb.append("TURN_COLD");
+                break;
+            case ALL_DEVICES_DISCONNECTED:
+                sb.append("ALL_DEVICES_DISCONNECTED");
+                break;
+            case DEVICES_DISCONNECT_TIMEOUT:
+                sb.append("DEVICES_DISCONNECT_TIMEOUT");
+                break;
+            case PER_PROCESS_TURN_ON:
+                sb.append("PER_PROCESS_TURN_ON");
+                break;
+            case PER_PROCESS_TURN_OFF:
+                sb.append("PER_PROCESS_TURN_OFF");
+                break;
+            case AIRPLANE_MODE_ON:
+                sb.append("AIRPLANE_MODE_ON");
+                break;
+            case AIRPLANE_MODE_OFF:
+                sb.append("AIRPLANE_MODE_OFF");
+                break;
+            case USER_TURN_ON:
+                sb.append("USER_TURN_ON");
+                break;
+            case USER_TURN_OFF:
+                sb.append("USER_TURN_OFF");
+                break;
+            case SERVICE_RECORD_LOADED:
+                sb.append("SERVICE_RECORD_LOADED");
+                break;
+            case PREPARE_BLUETOOTH_TIMEOUT:
+                sb.append("PREPARE_BLUETOOTH_TIMEOUT");
+                break;
+            case POWER_UP_TIMEOUT:
+                sb.append("POWER_UP_TIMEOUT");
+                break;
+            default:
+                sb.append("Unknow");
+                break;
+        }
+        return sb.toString();
     }
 
     private static void log(String msg) {

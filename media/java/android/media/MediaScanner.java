@@ -115,6 +115,7 @@ public class MediaScanner
     }
 
     private final static String TAG = "MediaScanner";
+    private final static boolean DEBUG_MEDIASCANNER = false;
 
     private static final String[] FILES_PRESCAN_PROJECTION = new String[] {
             Files.FileColumns._ID, // 0
@@ -316,7 +317,7 @@ public class MediaScanner
     private final String mExternalStoragePath;
 
     /** whether to use bulk inserts or individual inserts for each item */
-    private static final boolean ENABLE_BULK_INSERTS = true;
+    private static final boolean ENABLE_BULK_INSERTS = false;
 
     // used when scanning the image database so we know whether we have to prune
     // old thumbnail files
@@ -475,6 +476,8 @@ public class MediaScanner
                 if (wasModified) {
                     entry.mLastModified = lastModified;
                 } else {
+                    if (DEBUG_MEDIASCANNER)
+                        Log.d(TAG,"------------make new entry for path ="+ path);
                     entry = new FileEntry(0, path, lastModified,
                             (isDirectory ? MtpConstants.FORMAT_ASSOCIATION : 0));
                 }
@@ -793,6 +796,17 @@ public class MediaScanner
                 boolean alarms, boolean music, boolean podcasts)
                 throws RemoteException {
             // update database
+            int format = entry.mFormat;
+            if (format == 0) {
+                format = MediaFile.getFormatCode(entry.mPath, mMimeType);
+                }
+	    if(format==MtpConstants.FORMAT_UNDEFINED){
+		//Log.i("hanjiang","file:"+entry.mPath+"	FORMAT_UNDEFINED ");
+		if(null==MediaFile.getFileType(entry.mPath)){
+		//	Log.i("hanjiang","getFileType is null");
+			return null;
+			}
+		}
 
             // use album artist if artist is missing
             if (mArtist == null || mArtist.length() == 0) {
@@ -821,6 +835,15 @@ public class MediaScanner
                     }
                     if (previousSlash != 0) {
                         album = album.substring(previousSlash + 1, lastSlash);
+                    	if (album.equals("external_sd")) {
+						  					album = "";
+                      } else if (album.equals("usb_storage")) {
+						  					album = "";
+                      }else if (album.equals("sdcard")) {
+												album = "";
+                      }else {
+												album = "";
+                      }
                         values.put(Audio.Media.ALBUM, album);
                     }
                 }
@@ -906,10 +929,6 @@ public class MediaScanner
                     values.put(MediaStore.MediaColumns.MEDIA_SCANNER_NEW_OBJECT_ID, mMtpObjectHandle);
                 }
                 if (tableUri == mFilesUri) {
-                    int format = entry.mFormat;
-                    if (format == 0) {
-                        format = MediaFile.getFormatCode(entry.mPath, mMimeType);
-                    }
                     values.put(Files.FileColumns.FORMAT, format);
                 }
                 // Setting a flag in order not to use bulk insert for the file related with
@@ -1048,12 +1067,14 @@ public class MediaScanner
         if (filePath != null) {
             // query for only one file
             where = MediaStore.Files.FileColumns._ID + ">?" +
-                " AND " + Files.FileColumns.DATA + "=?";
-            selectionArgs = new String[] { "", filePath };
+                " AND " + Files.FileColumns.DATA + " like '"+filePath+"%' ";
+            selectionArgs = new String[] { "" };
         } else {
             where = MediaStore.Files.FileColumns._ID + ">?";
             selectionArgs = new String[] { "" };
         }
+        if (DEBUG_MEDIASCANNER)
+            Log.d(TAG,"-----------enter prescan,filePath = "+filePath+"where = "+where);
 
         // Tell the provider to not delete the file.
         // If the file is truly gone the delete is unnecessary, and we want to avoid
@@ -1274,7 +1295,11 @@ public class MediaScanner
         try {
             long start = System.currentTimeMillis();
             initialize(volumeName);
-            prescan(null, true);
+            for (int i = 0; i < directories.length; i++) {
+                //Log.d(TAG,"------prescan,len = "+directories.length+" directories= "+directories[i]);
+                prescan(directories[i], true);
+            }
+            //prescan(null, true);
             long prescan = System.currentTimeMillis();
 
             if (ENABLE_BULK_INSERTS) {

@@ -3441,6 +3441,7 @@ bool InputDispatcher::afterKeyEventLockedInterruptible(const sp<Connection>& con
         // Clear it out after dispatching the UP.
         int32_t originalKeyCode = keyEntry->keyCode;
         int32_t fallbackKeyCode = connection->inputState.getFallbackKey(originalKeyCode);
+        
         if (keyEntry->action == AKEY_EVENT_ACTION_UP) {
             connection->inputState.removeFallbackKey(originalKeyCode);
         }

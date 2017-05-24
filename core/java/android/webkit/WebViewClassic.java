@@ -145,6 +145,7 @@ import java.util.regex.Pattern;
 @SuppressWarnings("deprecation")
 public final class WebViewClassic implements WebViewProvider, WebViewProvider.ScrollDelegate,
         WebViewProvider.ViewDelegate {
+        
     /**
      * InputConnection used for ContentEditable. This captures changes
      * to the text and sends them either as key strokes or text changes.
@@ -1049,7 +1050,7 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
     static final int EDIT_TEXT_SIZE_CHANGED             = 150;
     static final int SHOW_CARET_HANDLE                  = 151;
     static final int UPDATE_CONTENT_BOUNDS              = 152;
-
+	static final int LOADIPADURL						= 153;
     private static final int FIRST_PACKAGE_MSG_ID = SCROLL_TO_MSG_ID;
     private static final int LAST_PACKAGE_MSG_ID = HIT_TEST_RESULT;
 
@@ -1229,6 +1230,7 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
     /**
      * See {@link WebViewProvider#init(Map, boolean)}
      */
+   private View mTitlebar = null;
     @Override
     public void init(Map<String, Object> javaScriptInterfaces, boolean privateBrowsing) {
         Context context = mContext;
@@ -1252,7 +1254,7 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
         setupProxyListener(context);
         setupTrustStorageListener(context);
         updateMultiTouchSupport(context);
-
+         
         if (privateBrowsing) {
             startPrivateBrowsing();
         }
@@ -1402,10 +1404,23 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
     public ScrollDelegate getScrollDelegate() {
         return this;
     }
+	
 
     public static WebViewClassic fromWebView(WebView webView) {
         return webView == null ? null : (WebViewClassic) webView.getWebViewProvider();
     }
+   //>>>>>add by qiuen
+   public void setEmbeddedTitleBar(View child)
+    {
+	 mViewManager.requestLayoutSurfaceViews(child);
+    }
+
+    public void forceUpdateWindow()
+    {
+         mViewManager.forceUpdateWindow();
+    }
+
+   //<<<<
 
     // Accessors, purely for convenience (and to reduce code churn during webview proxy migration).
     int getScrollX() {
@@ -1627,11 +1642,14 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
         mZoomManager.updateMultiTouchSupport(context);
     }
 
+  
+
     private void init() {
         OnTrimMemoryListener.init(mContext);
         mWebView.setWillNotDraw(false);
         mWebView.setClickable(true);
         mWebView.setLongClickable(true);
+ 
 
         final ViewConfiguration configuration = ViewConfiguration.get(mContext);
         int slop = configuration.getScaledTouchSlop();
@@ -4679,7 +4697,36 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
         // see http://b/issue?id=2457459
         imm.showSoftInput(mWebView, 0);
     }
-
+       /**
+       * recevied the video url from html5proxy
+       *@hide
+       */
+       public void receivedVideoUrl(String url){
+               Log.d(LOGTAG,"receivedVideoUrl");
+               WebChromeClient client =  getWebChromeClient();
+               if(client != null){
+                       client.onReceivedVideoUrl(getWebView(),url);
+               }
+       }
+	/**
+	*add by fjz
+	* this method called by browser when play video in embeded window 
+	*@hide
+	*/
+	public void pauseHtml5Video(){
+		            if (mHTML5VideoViewProxy != null) {
+						Log.d(LOGTAG,"pauseHtml5video");
+                 mHTML5VideoViewProxy.pauseAndDispatch();
+            }
+	}
+	/**
+	*add by fjz
+	*
+	*/
+	public void pauseFlashPlugin(){
+	
+		mWebViewCore.sendMessage(EventHub.PAUSE_FLASH);
+	}
     // Called by WebKit to instruct the UI to hide the keyboard
     private void hideSoftKeyboard() {
         InputMethodManager imm = InputMethodManager.peekInstance();
@@ -6977,6 +7024,7 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
     public boolean requestChildRectangleOnScreen(View child,
                                                  Rect rect,
                                                  boolean immediate) {
+
         if (mNativeClass == 0) {
             return false;
         }
@@ -7215,6 +7263,15 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
                     mInputDispatcher = new WebViewInputDispatcher(this,
                             mWebViewCore.getInputDispatcherCallbacks());
                     break;
+				case LOADIPADURL: {
+                      Log.i("WebViewClass","webview------loadipadurl"+msg.obj);
+                      String url = (String) msg.obj;
+                      WebChromeClient client =  getWebChromeClient();
+                      if(client != null){
+                         client.onNewIpadWebView(url);
+                       }
+                     }
+					break;
                 case UPDATE_TEXTFIELD_TEXT_MSG_ID:
                     // Make sure that the textfield is currently focused
                     // and representing the same node as the pointer.
@@ -8423,6 +8480,8 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
     /* package */ ViewManager getViewManager() {
         return mViewManager;
     }
+
+
 
     /** send content invalidate */
     protected void contentInvalidateAll() {

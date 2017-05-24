@@ -218,7 +218,7 @@ import java.io.PrintWriter;
  */
 public class InputMethodService extends AbstractInputMethodService {
     static final String TAG = "InputMethodService";
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = false;//gyq
 
     /**
      * The back button will close the input window.
@@ -1079,6 +1079,11 @@ public class InputMethodService extends AbstractInputMethodService {
      */
     public boolean onEvaluateInputViewShown() {
         Configuration config = getResources().getConfiguration();
+        boolean aaa = config.keyboard == Configuration.KEYBOARD_NOKEYS
+                || config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES;//gyq
+//        Log.v(TAG, "====================config.keyboard="+config.keyboard);//gyq
+//        Log.v(TAG, "====================config.hardKeyboardHidden="+config.hardKeyboardHidden);//gyq
+//        Log.v(TAG, "====================aaa="+aaa);//gyq
         return config.keyboard == Configuration.KEYBOARD_NOKEYS
                 || config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES;
     }
@@ -1735,6 +1740,34 @@ public class InputMethodService extends AbstractInputMethodService {
             }
             return false;
         }
+//gyq
+
+//mRootView
+//mInputView
+//mExtractView
+//		    Log.d("gyqgyq", "ggggggggggggggggggggg mRootView="+mRootView);//gyq 
+//		    Log.d("gyqgyq", "ggggggggggggggggggggg mInputView="+mInputView);//gyq 
+//		    Log.d("gyqgyq", "ggggggggggggggggggggg mExtractView="+mExtractView);//gyq 
+//		    Log.d("gyqgyq", "ggggggggggggggggggggg onCheckIsTextEditor()="+mRootView.onCheckIsTextEditor());//gyq 
+        if (event.getKeyCode() == KeyEvent.KEYCODE_CALLSOFTKEYBOARD) {//gyq
+		  			Configuration config = getResources().getConfiguration();
+//		      	Log.d("gyqgyq", "#####################config.keyboard="+config.keyboard);//gyq 
+//		      	Log.d("gyqgyq", "#####################config.hardKeyboardHidden="+config.hardKeyboardHidden);//gyq 
+		      	if (!isInputViewShown()) {
+				  			config.keyboard = 1;
+				  			config.hardKeyboardHidden = 2;
+						} else {
+				  			config.keyboard = 2;
+				  			config.hardKeyboardHidden = 1;
+						}
+//		      	Log.d("gyqgyq", "$$$$$$$$$$$$$$$$$$$$$config.keyboard="+config.keyboard);//gyq 
+//		      	Log.d("gyqgyq", "$$$$$$$$$$$$$$$$$$$$$config.hardKeyboardHidden="+config.hardKeyboardHidden);//gyq 
+		      	
+            onToggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+            return true;
+        }
+//
+
         return doMovementKey(keyCode, event, MOVEMENT_DOWN);
     }
 

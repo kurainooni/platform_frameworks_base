@@ -304,4 +304,16 @@ public class WebViewClient {
     public void onReceivedLoginRequest(WebView view, String realm,
             String account, String args) {
     }
+
+    /** 
+       * @hide
+       */
+       public void onNewIpadWebView(String url) {}
+
+ /**
+  *add by fjz
+  *recevice html5 video url and call by browser 
+  *@hide
+  */
+   public void onReceivedVideoUrl(WebView view ,String url){}
 }

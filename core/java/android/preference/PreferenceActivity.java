@@ -47,6 +47,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.os.SystemProperties;
 
 import com.android.internal.util.XmlUtils;
 
@@ -56,6 +57,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import android.app.ActivityManager;
+import android.content.ComponentName;
+import android.util.Log;
 
 /**
  * This is the base class for an activity to show a hierarchy of preferences
@@ -504,8 +508,8 @@ public abstract class PreferenceActivity extends ListActivity implements
 
         mListFooter = (FrameLayout)findViewById(com.android.internal.R.id.list_footer);
         mPrefsContainer = (ViewGroup) findViewById(com.android.internal.R.id.prefs_frame);
-        boolean hidingHeaders = onIsHidingHeaders();
-        mSinglePane = hidingHeaders || !onIsMultiPane();
+        boolean hidingHeaders = onIsHidingHeaders();     
+	 mSinglePane = hidingHeaders || !onIsMultiPane();	
         String initialFragment = getIntent().getStringExtra(EXTRA_SHOW_FRAGMENT);
         Bundle initialArguments = getIntent().getBundleExtra(EXTRA_SHOW_FRAGMENT_ARGUMENTS);
         int initialTitle = getIntent().getIntExtra(EXTRA_SHOW_FRAGMENT_TITLE, 0);
@@ -674,7 +678,9 @@ public abstract class PreferenceActivity extends ListActivity implements
     public boolean onIsMultiPane() {
         boolean preferMultiPane = getResources().getBoolean(
                 com.android.internal.R.bool.preferences_prefer_dual_pane);
-        return preferMultiPane;
+
+			return preferMultiPane;
+
     }
 
     /**

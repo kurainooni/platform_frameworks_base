@@ -268,8 +268,11 @@ public class MtpDatabase {
                 c = mMediaProvider.query(mObjectsUri, ID_PROJECTION, PATH_WHERE,
                         new String[] { path }, null, null);
                 if (c != null && c.getCount() > 0) {
-                    Log.w(TAG, "file already exists in beginSendObject: " + path);
-                    return -1;
+                    int handle = 1;
+                    if(c.moveToFirst())
+                        handle = c.getInt(0);
+                    Log.w(TAG, "file already exists in beginSendObject: " + path + ", handle = " + handle);
+                    return -handle;
                 }
             } catch (RemoteException e) {
                 Log.e(TAG, "RemoteException in beginSendObject", e);

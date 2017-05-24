@@ -4,6 +4,7 @@ package android.webkit;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.media.Metadata;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -40,8 +41,15 @@ public class HTML5VideoFullScreen extends HTML5VideoView
                     width = height * mVideoWidth / mVideoHeight;
                 }
             }
+			if(DebugFlags.WEB_HTML5)
+				LOGD("videoSurfaceView omMeasure width="+width+"height="+height);
             setMeasuredDimension(width, height);
         }
+    }
+
+	protected static final String LOGTAG = "HTML5VideoFullScreen";
+	  private void LOGD(String msg){
+			  Log.d(LOGTAG,msg);
     }
 
     // This view will contain the video.
@@ -81,18 +89,22 @@ public class HTML5VideoFullScreen extends HTML5VideoView
         public void surfaceChanged(SurfaceHolder holder, int format,
                                     int w, int h)
         {
+        if(DebugFlags.WEB_HTML5)
+        	LOGD("surfacecchanged mPlayer="+mPlayer);
             if (mPlayer != null && mMediaController != null
-                    && mCurrentState == STATE_PREPARED) {
+                    && (mCurrentState == STATE_PREPARED||mCurrentState == STATE_PLAYING)) {
                 if (mMediaController.isShowing()) {
                     // ensure the controller will get repositioned later
-                    mMediaController.hide();
+                //    mMediaController.hide();
                 }
-                mMediaController.show();
+               // mMediaController.show();
             }
         }
 
         public void surfaceCreated(SurfaceHolder holder)
         {
+        if(DebugFlags.WEB_HTML5)
+        	LOGD("surfaceCreated");
             mSurfaceHolder = holder;
             mFullScreenMode = FULLSCREEN_SURFACECREATED;
 
@@ -101,12 +113,13 @@ public class HTML5VideoFullScreen extends HTML5VideoView
 
         public void surfaceDestroyed(SurfaceHolder holder)
         {
+        if(DebugFlags.WEB_HTML5)
+        	LOGD("surfaceDestroyed");
             // After we return from this we can't use the surface any more.
             // The current Video View will be destroy when we play a new video.
-            pauseAndDispatch(mProxy);
-            // TODO: handle full screen->inline mode transition without a reload.
-            mPlayer.release();
-            mPlayer = null;
+            
+            //pauseAndDispatch(mProxy);
+           // mPlayer.release();
             mSurfaceHolder = null;
             if (mMediaController != null) {
                 mMediaController.hide();
@@ -114,28 +127,19 @@ public class HTML5VideoFullScreen extends HTML5VideoView
         }
     };
 
-    MediaPlayer.OnVideoSizeChangedListener mSizeChangedListener =
-        new MediaPlayer.OnVideoSizeChangedListener() {
-            @Override
-            public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
-                mVideoWidth = mp.getVideoWidth();
-                mVideoHeight = mp.getVideoHeight();
-                if (mVideoWidth != 0 && mVideoHeight != 0) {
-                    mVideoSurfaceView.getHolder().setFixedSize(mVideoWidth, mVideoHeight);
-                }
-            }
-    };
 
     private SurfaceView getSurfaceView() {
         return mVideoSurfaceView;
     }
 
-    HTML5VideoFullScreen(Context context, int videoLayerId, int position, boolean skipPrepare) {
+    HTML5VideoFullScreen(Context context,HTML5VideoViewProxy proxy ,int videoLayerId, int position,
+            boolean autoStart, int width, int height,int currentState) {
         mVideoSurfaceView = new VideoSurfaceView(context);
+		//mVideoSurfaceView.setZOrderOnTop(true);
         mFullScreenMode = FULLSCREEN_OFF;
-        mVideoWidth = 0;
-        mVideoHeight = 0;
-        init(videoLayerId, position, skipPrepare);
+        mVideoWidth = width;
+        mVideoHeight = height;
+        init(proxy ,videoLayerId, position, autoStart,currentState);
     }
 
     private void setMediaController(MediaController m) {
@@ -154,16 +158,27 @@ public class HTML5VideoFullScreen extends HTML5VideoView
 
     @Override
     public void decideDisplayMode() {
+    if(DebugFlags.WEB_HTML5)
+    	LOGD("decideDisplayMode currentState = "+mCurrentState);
         mPlayer.setDisplay(mSurfaceHolder);
+		if(mCurrentState ==STATE_PLAYING || mCurrentState == STATE_PREPARED){
+			videoPrepared();
+			//mVideoSurfaceView.setOnTouchListener(this);
+			//mVideoSurfaceView.getHolder().setFixedSize(mPlayer.getVideoWidth(), mPlayer.getVideoHeight());
+		}
     }
 
     private void prepareForFullScreen() {
+        // So in full screen, we reset the MediaPlayer
+        if(DebugFlags.WEB_HTML5)
+        	LOGD("prepareForFullScreen ");
+        //mPlayer.reset();
         MediaController mc = new FullScreenMediaController(mProxy.getContext(), mLayout);
         mc.setSystemUiVisibility(mLayout.getSystemUiVisibility());
         setMediaController(mc);
-        mPlayer.setScreenOnWhilePlaying(true);
-        mPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
+       
         prepareDataAndDisplayMode(mProxy);
+		 mPlayer.setScreenOnWhilePlaying(true);
     }
 
 
@@ -175,14 +190,17 @@ public class HTML5VideoFullScreen extends HTML5VideoView
         }
     }
 
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        super.onPrepared(mp);
-
-        mVideoSurfaceView.setOnTouchListener(this);
+	private void videoPrepared(){
+		if(DebugFlags.WEB_HTML5)
+			LOGD("videoPrepared");
+		
+		mVideoSurfaceView.setOnTouchListener(this);
         // Get the capabilities of the player for this stream
-        Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
+        Metadata data = mPlayer.getMetadata(MediaPlayer.METADATA_ALL,
                 MediaPlayer.BYPASS_METADATA_FILTER);
+		if(DebugFlags.WEB_HTML5)
+			LOGD("videprepared data="+data);
+		
         if (data != null) {
             mCanPause = !data.has(Metadata.PAUSE_AVAILABLE)
                     || data.getBoolean(Metadata.PAUSE_AVAILABLE);
@@ -190,35 +208,51 @@ public class HTML5VideoFullScreen extends HTML5VideoView
                     || data.getBoolean(Metadata.SEEK_BACKWARD_AVAILABLE);
             mCanSeekForward = !data.has(Metadata.SEEK_FORWARD_AVAILABLE)
                     || data.getBoolean(Metadata.SEEK_FORWARD_AVAILABLE);
+			if(DebugFlags.WEB_HTML5)
+				LOGD("mCanpause="+mCanPause+" mCanSeekBack="+mCanSeekBack+" mCanSeekForward="+mCanSeekForward);
         } else {
             mCanPause = mCanSeekBack = mCanSeekForward = true;
+        }
+
+        // mMediaController status depends on the Metadata result, so put it
+        // after reading the MetaData
+        if (mMediaController != null) {
+            mMediaController.setEnabled(true);
+            // If paused , should show the controller for ever!
+            if (getAutostart())
+                mMediaController.show();
+            else
+                mMediaController.show(0);
         }
 
         if (mProgressView != null) {
             mProgressView.setVisibility(View.GONE);
         }
 
-        mVideoWidth = mp.getVideoWidth();
-        mVideoHeight = mp.getVideoHeight();
+        mVideoWidth = mPlayer.getVideoWidth();
+        mVideoHeight = mPlayer.getVideoHeight();
         // This will trigger the onMeasure to get the display size right.
         mVideoSurfaceView.getHolder().setFixedSize(mVideoWidth, mVideoHeight);
-        // Call into the native to ask for the state, if still in play mode,
-        // this will trigger the video to play.
-        mProxy.dispatchOnRestoreState();
+	}
 
-        if (getStartWhenPrepared()) {
-            mPlayer.start();
-            // Clear the flag.
-            setStartWhenPrepared(false);
-        }
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+    if(DebugFlags.WEB_HTML5)
+    	LOGD("onPrepared mp ="+mp);
+        super.onPrepared(mp);
+		videoPrepared();
+        
+    }
 
-        // mMediaController status depends on the Metadata result, so put it
-        // after reading the MetaData.
-        // And make sure mPlayer state is updated before showing the controller.
-        if (mMediaController != null) {
-            mMediaController.setEnabled(true);
-            mMediaController.show();
-        }
+    @Override
+    public void onVideoSizeChanged(int width, int height) {
+    if(DebugFlags.WEB_HTML5)
+    	LOGD("onVideoSizeChanged");
+	
+        mVideoWidth = width;
+		mVideoHeight = height;
+		 // This will trigger the onMeasure to get the display size right.
+        mVideoSurfaceView.getHolder().setFixedSize(mVideoWidth, mVideoHeight);
     }
 
     public boolean fullScreenExited() {
@@ -232,6 +266,25 @@ public class HTML5VideoFullScreen extends HTML5VideoView
                 // which happens when the video view is detached from its parent
                 // view. This happens in the WebChromeClient before this method
                 // is invoked.
+                if(DebugFlags.WEB_HTML5)
+                	LOGD("oncusviewhiden inlinesurface="+mProxy.getInlineSurface()+
+                "mPlayer="+mPlayer+" mProxy="+mProxy+" isPlaying="+isPlaying());
+				boolean isPaused = !isPlaying();
+				if(HTML5VideoViewProxy.VideoPlayer.isVideoSelfEnded){
+					LOGD("video onComplete ");
+				}else{
+					LOGD("video is playing or pause");
+					if(!mProxy.inlineSurfaceDeleted()){
+						mPlayer.setSurface(mProxy.getInlineSurface());	
+						mProxy.dispatchUpdatePlaybackState(isPaused);
+						mProxy.setInlineVideoView();
+					
+					}else{
+						mProxy.createInlineHtml5VideoView(mProxy,mVideoLayerId,getCurrentPosition());
+						mProxy.dispatchUpdatePlaybackState(isPaused);
+					}
+				}
+				
                 mProxy.dispatchOnStopFullScreen();
                 mLayout.removeView(getSurfaceView());
 
@@ -241,13 +294,13 @@ public class HTML5VideoFullScreen extends HTML5VideoView
                 }
                 mLayout = null;
                 // Re enable plugin views.
-                mProxy.getWebView().getViewManager().showAll();
+              //  mProxy.getWebView().getViewManager().showAll();
 
                 mProxy = null;
 
                 // Don't show the controller after exiting the full screen.
                 mMediaController = null;
-                mCurrentState = STATE_RESETTED;
+               // mCurrentState = STATE_RELEASED;
             }
         };
 
@@ -264,7 +317,12 @@ public class HTML5VideoFullScreen extends HTML5VideoView
         mVideoSurfaceView.setFocusable(true);
         mVideoSurfaceView.setFocusableInTouchMode(true);
         mVideoSurfaceView.requestFocus();
+		//LOGD("enterfullscreenvideostate mLayout="+mLayout+" thread.id="+Process.myTid());
 
+        WebChromeClient client = webView.getWebChromeClient();
+		if (client != null && mLayout != null) {
+			client.onHideCustomView();
+		}
         // Create a FrameLayout that will contain the VideoView and the
         // progress view (if any).
         mLayout = new FrameLayout(mProxy.getContext());
@@ -276,13 +334,13 @@ public class HTML5VideoFullScreen extends HTML5VideoView
         mLayout.addView(getSurfaceView(), layoutParams);
 
         mLayout.setVisibility(View.VISIBLE);
-        WebChromeClient client = webView.getWebChromeClient();
+
         if (client != null) {
             client.onShowCustomView(mLayout, mCallback);
             // Plugins like Flash will draw over the video so hide
             // them while we're playing.
-            if (webView.getViewManager() != null)
-                webView.getViewManager().hideAll();
+           // if (webView.getViewManager() != null)
+           //     webView.getViewManager().hideAll();
 
             mProgressView = client.getVideoLoadingProgressView();
             if (mProgressView != null) {
@@ -290,6 +348,8 @@ public class HTML5VideoFullScreen extends HTML5VideoView
                 mProgressView.setVisibility(View.VISIBLE);
             }
         }
+//in fullscreen, we cancel the timer for inline
+		cancelTimer();
     }
 
     /**

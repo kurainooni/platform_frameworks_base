@@ -125,6 +125,8 @@ class ServerThread extends Thread {
         ConnectivityService connectivity = null;
         WifiP2pService wifiP2p = null;
         WifiService wifi = null;
+//$_rbox_$_modify_$_chenzhi_20120309
+        EthernetService eth = null;
         NsdService serviceDiscovery= null;
         IPackageManager pm = null;
         Context context = null;
@@ -244,6 +246,7 @@ class ServerThread extends Thread {
             } else if (factoryTest == SystemServer.FACTORY_TEST_LOW_LEVEL) {
                 Slog.i(TAG, "No Bluetooth Service (factory test)");
             } else {
+            		/*
                 Slog.i(TAG, "Bluetooth Service");
                 bluetooth = new BluetoothService(context);
                 ServiceManager.addService(BluetoothAdapter.BLUETOOTH_SERVICE, bluetooth);
@@ -260,7 +263,7 @@ class ServerThread extends Thread {
                     Settings.Secure.BLUETOOTH_ON, 0);
                 if (bluetoothOn != 0) {
                     bluetooth.enable();
-                }
+                }*/;
             }
 
         } catch (RuntimeException e) {
@@ -429,7 +432,24 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 reportWtf("starting Connectivity Service", e);
             }
-
+//$_rbox_$_modify_$_chenzhi_20120309: add for ethernet
+//$_rbox_$_modify_$_begin
+			try {
+				 Slog.i(TAG, "Ethernet Service");
+				 eth = new EthernetService(context);
+				 ServiceManager.addService(Context.ETHERNET_SERVICE, eth);
+			 } catch (Throwable e) {
+				 reportWtf("starting Ethernet Service", e);
+			 }
+			 
+			 int ethOn = Settings.Secure.getInt(mContentResolver,
+				 Settings.Secure.ETHERNET_ON, 0);
+			 if (ethOn == 1) {
+				 eth.setEthernetEnabled(true);
+			 } else  {
+				 eth.setEthernetEnabled(false);
+			 }
+//$_rbox_$_modify_$_end
             try {
                 Slog.i(TAG, "Network Service Discovery Service");
                 serviceDiscovery = NsdService.create(context);

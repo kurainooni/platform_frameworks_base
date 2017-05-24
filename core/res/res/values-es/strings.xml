@@ -20,6 +20,86 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  
+<!--nand flash-->	
+    <string name="nandflash_ext_media_checking_notification_title" >Preparando almacenamiento local</string>
+    <string name="nandflash_ext_media_nofs_notification_message" >Almacenamiento local en blanco o tiene sistema de archivos compatible.</string>
+    <string name="nandflash_ext_media_unmountable_notification_title" >dañado almacenamiento local</string>
+    <string name="nandflash_ext_media_unmountable_notification_message" >Almacenamiento local dañado. Puede que tenga que volver a formatear.</string>
+    <string name="nandflash_ext_media_badremoval_notification_title" >Almacenamiento local inesperadamente eliminado</string>
+    <string name="nandflash_ext_media_badremoval_notification_message" >Desmontar almacenamiento local antes de retirar para evitar la pérdida de datos.</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_title" >Almacenamiento local seguro para eliminar</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_message" >Puede quitar almacenamiento local.</string>
+    <string name="nandflash_ext_media_nomedia_notification_title" >Se ha desmontado de forma segura la unidad de almacenamiento local</string>
+    <string name="nandflash_ext_media_nomedia_notification_message" >Almacenamiento local eliminado. Inserte uno nuevo.</string>
+    <string name="nandflash_progress_unmounting" >Desmontando almacenamiento local ...</string>
+    <string name="nandflash_progress_erasing" >Borrado de almacenamiento local ...</string>
+    <string name="nandflash_format_error" >No se pudo borrar almacenamiento local.</string>
+    <string name="nandflash_media_bad_removal">Almacenamiento local fue retirado antes de ser desmontado.</string>
+    <string name="nandflash_media_checking" >Almacenamiento local está siendo revisado.</string>
+    <string name="nandflash_media_removed">Almacenamiento local se ha eliminado.</string>
+    <string name="nandflash_media_shared" >Almacenamiento local está actualmente en uso por un ordenador.</string>
+    <string name="nandflash_ext_media_nofs_notification_title">En blanco almacenamiento local.</string>
+<!--sdcard-->	
+    <string name="sdcard_ext_media_checking_notification_title" >Preparando Tarjeta SD</string>
+    <string name="sdcard_ext_media_nofs_notification_message" >Tarjeta SD en blanco o tiene sistema de archivos compatible.</string>
+    <string name="sdcard_ext_media_unmountable_notification_title" >dañado Tarjeta SD</string>
+    <string name="sdcard_ext_media_unmountable_notification_message" >Tarjeta SD dañado. Puede que tenga que volver a formatear.</string>
+    <string name="sdcard_ext_media_badremoval_notification_title" >Tarjeta SD inesperadamente eliminado</string>
+    <string name="sdcard_ext_media_badremoval_notification_message" >Desmontar Tarjeta SD antes de retirar para evitar la pérdida de datos.</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_title" >Tarjeta SD seguro para eliminar</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_message" >Puede quitar Tarjeta SD.</string>
+    <string name="sdcard_ext_media_nomedia_notification_title" >Se ha desmontado de forma segura la unidad de Tarjeta SD</string>
+    <string name="sdcard_ext_media_nomedia_notification_message" >Tarjeta SD eliminado. Inserte uno nuevo.</string>
+    <string name="sdcard_progress_unmounting" >Desmontando Tarjeta SD...</string>
+    <string name="sdcard_progress_erasing" >Borrado de Tarjeta SD...</string>
+    <string name="sdcard_format_error" >No se pudo borrar Tarjeta SD.</string>
+    <string name="sdcard_media_bad_removal">Tarjeta SD fue retirado antes de ser desmontado.</string>
+    <string name="sdcard_media_checking" >Tarjeta SD está siendo revisado.</string>
+    <string name="sdcard_media_removed">Tarjeta SD se ha eliminado.</string>
+    <string name="sdcard_media_shared" >Tarjeta SD está actualmente en uso por un ordenador.</string>
+    <string name="sdcard_ext_media_nofs_notification_title">En blanco Tarjeta SD.</string>
+<!--usb-->	
+    <string name="usb_ext_media_checking_notification_title" >Preparando almacenamiento USB</string>
+    <string name="usb_ext_media_nofs_notification_message" >Almacenamiento USB en blanco o tiene sistema de archivos compatible.</string>
+    <string name="usb_ext_media_unmountable_notification_title" >dañado almacenamiento USB</string>
+    <string name="usb_ext_media_unmountable_notification_message" >Almacenamiento USB dañado. Puede que tenga que volver a formatear.</string>
+    <string name="usb_ext_media_badremoval_notification_title" >Almacenamiento USB inesperadamente eliminado</string>
+    <string name="usb_ext_media_badremoval_notification_message" >Desmontar almacenamiento USB antes de retirar para evitar la pérdida de datos.</string>
+    <string name="usb_ext_media_safe_unmount_notification_title" >Almacenamiento USB seguro para eliminar</string>
+    <string name="usb_ext_media_safe_unmount_notification_message" >Puede quitar almacenamiento USB.</string>
+    <string name="usb_ext_media_nomedia_notification_title" >Se ha desmontado de forma segura la unidad de almacenamiento USB</string>
+    <string name="usb_ext_media_nomedia_notification_message" >Almacenamiento USB eliminado. Inserte uno nuevo.</string>
+    <string name="usb_progress_unmounting" >Desmontando almacenamiento USB ...</string>
+    <string name="usb_progress_erasing" >Borrado de almacenamiento USB ...</string>
+    <string name="usb_format_error" >No se pudo borrar almacenamiento USB.</string>
+    <string name="usb_media_bad_removal">Almacenamiento USB fue retirado antes de ser desmontado.</string>
+    <string name="usb_media_checking" >Almacenamiento USB está siendo revisado.</string>
+    <string name="usb_media_removed">Almacenamiento USB se ha eliminado.</string>
+    <string name="usb_media_shared" >Almacenamiento USB está actualmente en uso por un ordenador.</string>
+    <string name="usb_ext_media_nofs_notification_title">En blanco almacenamiento USB.</string>
+    
+<!--mb0-->	
+    <string name="mb0_ext_media_checking_notification_title" >Preparando Tarjeta SD en Docking</string>
+    <string name="mb0_ext_media_nofs_notification_message" >Tarjeta SD en Docking en blanco o tiene sistema de archivos compatible.</string>
+    <string name="mb0_ext_media_unmountable_notification_title" >dañado Tarjeta SD en Docking</string>
+    <string name="mb0_ext_media_unmountable_notification_message" >Tarjeta SD en Docking dañado. Puede que tenga que volver a formatear.</string>
+    <string name="mb0_ext_media_badremoval_notification_title" >Tarjeta SD en Docking inesperadamente eliminado</string>
+    <string name="mb0_ext_media_badremoval_notification_message" >Desmontar Tarjeta SD en Docking antes de retirar para evitar la pérdida de datos.</string>
+    <string name="mb0_ext_media_safe_unmount_notification_title" >Tarjeta SD en Docking seguro para eliminar</string>
+    <string name="mb0_ext_media_safe_unmount_notification_message" >Puede quitar Tarjeta SD en Docking.</string>
+    <string name="mb0_ext_media_nomedia_notification_title" >Se ha desmontado de forma segura la unidad de Tarjeta SD en Docking</string>
+    <string name="mb0_ext_media_nomedia_notification_message" >Tarjeta SD en Docking eliminado. Inserte uno nuevo.</string>
+    <string name="mb0_progress_unmounting" >Desmontando Tarjeta SD en Docking ...</string>
+    <string name="mb0_progress_erasing" >Borrado de Tarjeta SD en Docking ...</string>
+    <string name="mb0_format_error" >No se pudo borrar Tarjeta SD en Docking.</string>
+    <string name="mb0_media_bad_removal">Tarjeta SD en Docking fue retirado antes de ser desmontado.</string>
+    <string name="mb0_media_checking" >Tarjeta SD en Docking está siendo revisado.</string>
+    <string name="mb0_media_removed">Tarjeta SD en Docking se ha eliminado.</string>
+    <string name="mb0_media_shared" >Tarjeta SD en Docking está actualmente en uso por un ordenador.</string>
+    <string name="mb0_ext_media_nofs_notification_title">En blanco Tarjeta SD en Docking.</string>
+    
+    
     <string name="byteShort" msgid="8340973892742019101">"B"</string>
     <string name="kilobyteShort" msgid="5973789783504771878">"KB"</string>
     <string name="megabyteShort" msgid="6355851576770428922">"MB"</string>
@@ -145,7 +225,7 @@
     <string name="shutdown_progress" msgid="2281079257329981203">"Apagando..."</string>
     <string name="shutdown_confirm" product="tablet" msgid="3385745179555731470">"El tablet se apagará."</string>
     <string name="shutdown_confirm" product="default" msgid="649792175242821353">"El teléfono se apagará."</string>
-    <string name="shutdown_confirm_question" msgid="2906544768881136183">"¿Seguro que quieres apagar el teléfono?"</string>
+    <string name="shutdown_confirm_question" msgid="2906544768881136183">"¿Seguro que quieres apagar el dispositivo?"</string>
     <string name="reboot_safemode_title" msgid="7054509914500140361">"Reiniciar en modo seguro"</string>
     <string name="reboot_safemode_confirm" msgid="55293944502784668">"¿Quieres reiniciar el sistema en modo seguro? Se inhabilitarán todas las aplicaciones externas que hayas instalado. Esas aplicaciones se restaurarán la próxima vez que reinicies del sistema."</string>
     <string name="recent_tasks_title" msgid="3691764623638127888">"Reciente"</string>

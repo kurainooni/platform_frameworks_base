@@ -268,6 +268,7 @@ public class WindowManagerService extends IWindowManager.Stub
     private static final String SYSTEM_SECURE = "ro.secure";
     private static final String SYSTEM_DEBUGGABLE = "ro.debuggable";
     private static final String SYSTEM_HEADLESS = "ro.config.headless";
+    private static final String WINDOW_FAKE_ROTATION = "ro.sf.fakerotation";
 
     /**
      * Condition waited on by {@link #reenableKeyguard} to know the call to
@@ -434,6 +435,16 @@ public class WindowManagerService extends IWindowManager.Stub
             = new ArrayList<Pair<WindowState, IRemoteCallback>>();
 
     /**
+     * Check product characteristics.
+     */
+    boolean mIsTabletEnv;
+
+    /**
+     *  compatiblity mode under standard screen
+     */
+    boolean mIsRunningInCompatibilityMode = false;
+
+    /**
      * Windows that have called relayout() while we were running animations,
      * so we need to tell when the animation is done.
      */
@@ -476,6 +487,10 @@ public class WindowManagerService extends IWindowManager.Stub
     final Object mDisplaySizeLock = new Object();
     int mInitialDisplayWidth = 0;
     int mInitialDisplayHeight = 0;
+    int mStandardScreenWidth = 0;
+    int mStandardScreenHeight = 0;
+    int mRawScreenWidth = 0;
+    int mRawScreenHeight = 0;
     int mBaseDisplayWidth = 0;
     int mBaseDisplayHeight = 0;
     int mCurDisplayWidth = 0;
@@ -490,6 +505,7 @@ public class WindowManagerService extends IWindowManager.Stub
     int mRotation = 0;
     int mForcedAppOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
     boolean mAltOrientation = false;
+    boolean mRotateOnBoot = false;
     ArrayList<IRotationWatcher> mRotationWatchers
             = new ArrayList<IRotationWatcher>();
     int mDeferredRotationPauseCount;
@@ -608,6 +624,8 @@ public class WindowManagerService extends IWindowManager.Stub
 
     float mWindowAnimationScale = 1.0f;
     float mTransitionAnimationScale = 1.0f;
+    float mWindowAnimationScaleBackup = 1.0f;
+    float mTransitionAnimationScaleBackup = 1.0f;
     float mAnimatorDurationScale = 1.0f;
 
     final InputManagerService mInputManager;
@@ -911,6 +929,10 @@ public class WindowManagerService extends IWindowManager.Stub
 
         mInputManager = new InputManagerService(context, mInputMonitor);
         mAnimator = new WindowAnimator(this, context, mPolicy);
+
+        mRotateOnBoot = isWindowFakeRotation();
+
+        mIsTabletEnv = isTabletEnv();
 
         PolicyThread thr = new PolicyThread(mPolicy, this, context, pm);
         thr.start();
@@ -2591,6 +2613,33 @@ public class WindowManagerService extends IWindowManager.Stub
             Binder.restoreCallingIdentity(origId);
         }
     }
+    //>>>>>add by rk
+  void setInvisiableRegionScreen(Session session, IWindow client, Region region) {
+     long origId = Binder.clearCallingIdentity();
+     try {
+         synchronized (mWindowMap) {
+             WindowState w = windowForClientLocked(session, client, false);
+	    WindowStateAnimator winAnimator =  w.mWinAnimator;
+             if ((winAnimator != null) && (winAnimator.mSurface != null)) {
+                 if (SHOW_LIGHT_TRANSACTIONS) Slog.i(TAG,
+                         ">>> OPEN TRANSACTION setTransparentRegion");
+                 Surface.openTransaction();
+                 try {
+                                            if (SHOW_TRANSACTIONS) logSurface(w,
+                             "invisiableRegionHint=" + region, null);
+                                            winAnimator.mSurface.setInvisiableRegionScreenHint(region);
+                 } finally {
+                     Surface.closeTransaction();
+                     if (SHOW_LIGHT_TRANSACTIONS) Slog.i(TAG,
+                             "<<< CLOSE TRANSACTION setTransparentRegion");
+                 }
+             }
+         }
+     } finally {
+         Binder.restoreCallingIdentity(origId);
+     }
+    }
+    //<<<<<
 
     void setInsetsWindow(Session session, IWindow client,
             int touchableInsets, Rect contentInsets,
@@ -4474,8 +4523,13 @@ public class WindowManagerService extends IWindowManager.Stub
                 if (mAppsFreezingScreen == 1) {
                     startFreezingDisplayLocked(false);
                     mH.removeMessages(H.APP_FREEZE_TIMEOUT);
-                    mH.sendMessageDelayed(mH.obtainMessage(H.APP_FREEZE_TIMEOUT),
-                            5000);
+                    if (mRotateOnBoot) {
+                        mH.sendMessageDelayed(mH.obtainMessage(H.APP_FREEZE_TIMEOUT),
+                                5000);
+                    } else {
+                        mH.sendMessageDelayed(mH.obtainMessage(H.APP_FREEZE_TIMEOUT),
+                                1000);
+                    }
                 }
             }
             final int N = wtoken.allAppWindows.size();
@@ -5308,18 +5362,21 @@ public class WindowManagerService extends IWindowManager.Stub
                 this.dump(null, pw, null);
                 Slog.i(TAG, sw.toString());
             }
-            try {
-                IBinder surfaceFlinger = ServiceManager.getService("SurfaceFlinger");
-                if (surfaceFlinger != null) {
-                    //Slog.i(TAG, "******* TELLING SURFACE FLINGER WE ARE BOOTED!");
-                    Parcel data = Parcel.obtain();
-                    data.writeInterfaceToken("android.ui.ISurfaceComposer");
-                    surfaceFlinger.transact(IBinder.FIRST_CALL_TRANSACTION, // BOOT_FINISHED
-                                            data, null, 0);
-                    data.recycle();
+
+            if (!mRotateOnBoot) {
+                try {
+                    IBinder surfaceFlinger = ServiceManager.getService("SurfaceFlinger");
+                    if (surfaceFlinger != null) {
+                        //Slog.i(TAG, "******* TELLING SURFACE FLINGER WE ARE BOOTED!");
+                        Parcel data = Parcel.obtain();
+                        data.writeInterfaceToken("android.ui.ISurfaceComposer");
+                        surfaceFlinger.transact(IBinder.FIRST_CALL_TRANSACTION, // BOOT_FINISHED
+                                                data, null, 0);
+                        data.recycle();
+                    }
+                } catch (RemoteException ex) {
+                    Slog.e(TAG, "Boot completed: SurfaceFlinger is dead!");
                 }
-            } catch (RemoteException ex) {
-                Slog.e(TAG, "Boot completed: SurfaceFlinger is dead!");
             }
 
             // Enable input dispatch.
@@ -5551,9 +5608,16 @@ public class WindowManagerService extends IWindowManager.Stub
                 }
             }
 
+            if (mIsTabletEnv) {
+                scale = width / (float)mInitialDisplayWidth;
+                dw = width;
+                dh = (int)(mInitialDisplayHeight * scale);
+            } else {
             // The screen shot will contain the entire screen.
-            dw = (int)(dw*scale);
-            dh = (int)(dh*scale);
+                dw = (int)(dw*scale);
+                dh = (int)(dh*scale);
+            }
+
             if (rot == Surface.ROTATION_90 || rot == Surface.ROTATION_270) {
                 int tmp = dw;
                 dw = dh;
@@ -5579,7 +5643,13 @@ public class WindowManagerService extends IWindowManager.Stub
 
         Bitmap bm = Bitmap.createBitmap(width, height, rawss.getConfig());
         Matrix matrix = new Matrix();
-        ScreenRotationAnimation.createRotationMatrix(rot, dw, dh, matrix);
+
+        if (mIsTabletEnv) {
+            ScreenRotationAnimation.createRotationMatrixForRecentPanel(rot, dw, dh, matrix);
+        } else {
+            ScreenRotationAnimation.createRotationMatrix(rot, dw, dh, matrix);
+        }
+
         matrix.postTranslate(-FloatMath.ceil(frame.left*scale), -FloatMath.ceil(frame.top*scale));
         Canvas canvas = new Canvas(bm);
         canvas.drawBitmap(rawss, matrix, null);
@@ -5732,6 +5802,11 @@ public class WindowManagerService extends IWindowManager.Stub
                     + " metrics");
         }
 
+        if (mRotateOnBoot) {
+             mRotation = Surface.ROTATION_0;
+             rotation = Surface.ROTATION_90;
+        }
+
         if (mRotation == rotation && mAltOrientation == altOrientation) {
             // No change.
             return false;
@@ -5756,6 +5831,24 @@ public class WindowManagerService extends IWindowManager.Stub
         startFreezingDisplayLocked(inTransaction);
         mInputManager.setDisplayOrientation(0, rotation,
                 mDisplay != null ? mDisplay.getExternalRotation() : Surface.ROTATION_0);
+
+        if (mRotateOnBoot) {
+            try {
+                IBinder surfaceFlinger = ServiceManager.getService("SurfaceFlinger");
+                if (surfaceFlinger != null) {
+                    //Slog.i(TAG, "******* TELLING SURFACE FLINGER WE ARE BOOTED!");
+                    Parcel data = Parcel.obtain();
+                    data.writeInterfaceToken("android.ui.ISurfaceComposer");
+                    surfaceFlinger.transact(IBinder.FIRST_CALL_TRANSACTION,
+                                            data, null, 0);
+                    data.recycle();
+                }
+            } catch (RemoteException ex) {
+                Slog.e(TAG, "Boot completed: SurfaceFlinger is dead!");
+            }
+            // Waiting for boot animation to finish;
+            SystemClock.sleep(1000);
+        }
 
         // We need to update our screen size information to match the new
         // rotation.  Note that this is redundant with the later call to
@@ -5790,6 +5883,9 @@ public class WindowManagerService extends IWindowManager.Stub
             }
         }
 
+        if (mIsRunningInCompatibilityMode) {
+            setCompatibilityModeState(true, true);
+        }
         rebuildBlackFrame();
 
         for (int i=mWindows.size()-1; i>=0; i--) {
@@ -5940,6 +6036,14 @@ public class WindowManagerService extends IWindowManager.Stub
     private boolean isSystemSecure() {
         return "1".equals(SystemProperties.get(SYSTEM_SECURE, "1")) &&
                 "0".equals(SystemProperties.get(SYSTEM_DEBUGGABLE, "0"));
+    }
+
+    private boolean isWindowFakeRotation() {
+        return "true".equals(SystemProperties.get(WINDOW_FAKE_ROTATION, "false"));
+    }
+
+    private boolean isTabletEnv() {
+        return (SystemProperties.getInt("ro.sf.hwrotation",0) % 180 ) == 90;
     }
 
     /**
@@ -6398,7 +6502,12 @@ public class WindowManagerService extends IWindowManager.Stub
         sl = reduceConfigLayout(sl, Surface.ROTATION_90, density, unrotDh, unrotDw);
         sl = reduceConfigLayout(sl, Surface.ROTATION_180, density, unrotDw, unrotDh);
         sl = reduceConfigLayout(sl, Surface.ROTATION_270, density, unrotDh, unrotDw);
-        outConfig.smallestScreenWidthDp = (int)(mSmallestDisplayWidth / density);
+        int sw = (int)(mSmallestDisplayWidth / density);
+        if (SystemProperties.get("ro.build.characteristics","none").equals("tablet")
+                && sw < 720 && sw!=480) {
+            sw = 720;
+        }
+        outConfig.smallestScreenWidthDp = sw;
         outConfig.screenLayout = sl;
     }
 
@@ -6801,6 +6910,8 @@ public class WindowManagerService extends IWindowManager.Stub
             synchronized(mDisplaySizeLock) {
                 mInitialDisplayWidth = mDisplay.getRawWidth();
                 mInitialDisplayHeight = mDisplay.getRawHeight();
+                mStandardScreenWidth = mDisplay.getStandardScreenWidth();
+                mStandardScreenHeight = mDisplay.getStandardScreenHeight();
                 int rot = mDisplay.getRotation();
                 if (rot == Surface.ROTATION_90 || rot == Surface.ROTATION_270) {
                     // If the screen is currently rotated, we need to swap the
@@ -6809,8 +6920,8 @@ public class WindowManagerService extends IWindowManager.Stub
                     mInitialDisplayWidth = mInitialDisplayHeight;
                     mInitialDisplayHeight = tmp;
                 }
-                mBaseDisplayWidth = mCurDisplayWidth = mAppDisplayWidth = mInitialDisplayWidth;
-                mBaseDisplayHeight = mCurDisplayHeight = mAppDisplayHeight = mInitialDisplayHeight;
+                mRawScreenWidth = mBaseDisplayWidth = mCurDisplayWidth = mAppDisplayWidth = mInitialDisplayWidth;
+                mRawScreenHeight = mBaseDisplayHeight = mCurDisplayHeight = mAppDisplayHeight = mInitialDisplayHeight;
                 mAnimator.setDisplayDimensions(mCurDisplayWidth, mCurDisplayHeight,
                         mAppDisplayWidth, mAppDisplayHeight);
             }
@@ -7492,6 +7603,13 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
+    public void getRawDisplaySize(Point size) {
+        synchronized(mDisplaySizeLock) {
+            size.x = mDisplay.getRawWidth();
+            size.y = mDisplay.getRawHeight();
+        }
+    }
+
     public int getMaximumSizeDimension() {
         synchronized(mDisplaySizeLock) {
             // Do this based on the raw screen size, until we are smarter.
@@ -7537,6 +7655,9 @@ public class WindowManagerService extends IWindowManager.Stub
         if (mBaseDisplayWidth < mInitialDisplayWidth
                 || mBaseDisplayHeight < mInitialDisplayHeight) {
             int initW, initH, baseW, baseH;
+                int initL, initT, baseL, baseT;
+
+                initL=initT=baseL=baseT=0;
             final boolean rotated = (mRotation == Surface.ROTATION_90
                     || mRotation == Surface.ROTATION_270);
             if (rotated) {
@@ -7550,8 +7671,18 @@ public class WindowManagerService extends IWindowManager.Stub
                 baseW = mBaseDisplayWidth;
                 baseH = mBaseDisplayHeight;
             }
-            Rect outer = new Rect(0, 0, initW, initH);
-            Rect inner = new Rect(0, 0, baseW, baseH);
+                if (mIsRunningInCompatibilityMode) {
+                    initL = 0;
+                    initT = 0;
+
+                    Point p = new Point();
+                    getCompatFrameOffset(p);
+                    baseL = p.x;
+                    baseT = p.y;
+                }
+
+                Rect outer = new Rect(initL, initT, initW + initL, initH + initT);
+                Rect inner = new Rect(baseL, baseT, baseW + baseL, baseH + baseT);
             try {
                 mBlackFrame = new BlackFrame(mFxSession, outer, inner, MASK_LAYER);
             } catch (Surface.OutOfResourcesException e) {
@@ -7586,6 +7717,8 @@ public class WindowManagerService extends IWindowManager.Stub
             mBaseDisplayWidth = width;
             mBaseDisplayHeight = height;
         }
+
+        rebuildBlackFrame();
         mPolicy.setInitialDisplaySize(mDisplay, mBaseDisplayWidth, mBaseDisplayHeight);
 
         mLayoutNeeded = true;
@@ -7914,7 +8047,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     + mLayoutNeeded + " dw=" + dw + " dh=" + dh);
         }
         
-        mPolicy.beginLayoutLw(dw, dh, mRotation);
+        mPolicy.beginLayoutLw(dw, dh, mRotation, mIsRunningInCompatibilityMode);
         mSystemDecorLayer = mPolicy.getSystemDecorRectLw(mSystemDecorRect);
 
         int seq = mLayoutSeq+1;
@@ -9312,6 +9445,13 @@ public class WindowManagerService extends IWindowManager.Stub
 
         mInputMonitor.freezeInputDispatchingLw();
 
+        if (mRotateOnBoot) {
+            mWindowAnimationScaleBackup = getAnimationScale(0);
+            mTransitionAnimationScaleBackup = getAnimationScale(1);
+            setAnimationScale(0, 0);
+            setAnimationScale(1, 0);
+        }
+
         if (mNextAppTransition != WindowManagerPolicy.TRANSIT_UNSET) {
             mNextAppTransition = WindowManagerPolicy.TRANSIT_UNSET;
             mNextAppTransitionType = ActivityOptions.ANIM_NONE;
@@ -9404,7 +9544,13 @@ public class WindowManagerService extends IWindowManager.Stub
                 2000);
 
         mScreenFrozenLock.release();
-        
+
+        if (mRotateOnBoot) {
+            setAnimationScale(0, mWindowAnimationScaleBackup);
+            setAnimationScale(1, mTransitionAnimationScaleBackup);
+            mRotateOnBoot = false;
+        }
+
         if (updateRotation) {
             if (DEBUG_ORIENTATION) Slog.d(TAG, "Performing post-rotate rotation");
             configChanged |= updateRotationUncheckedLocked(false);
@@ -9544,6 +9690,50 @@ public class WindowManagerService extends IWindowManager.Stub
             }
             return false;
         }
+    }
+
+    public boolean isRunningInCompatibilityMode() {
+        return mIsRunningInCompatibilityMode;
+    }
+
+    public void setCompatibilityModeState(boolean enable, boolean force) {
+        if (mIsRunningInCompatibilityMode != enable || force) {
+            mIsRunningInCompatibilityMode = enable;
+
+            int dw = 0;
+            int dh = 0;
+
+            mRawScreenWidth = mDisplay.getRawWidth();
+            mRawScreenHeight = mDisplay.getRawHeight();
+
+            mStandardScreenWidth = mDisplay.getStandardScreenWidth();
+            mStandardScreenHeight = mDisplay.getStandardScreenHeight();
+
+            if (mIsRunningInCompatibilityMode) {
+                dw = mStandardScreenWidth;
+                dh = mStandardScreenHeight;
+            } else {
+                dw = mInitialDisplayWidth;
+                dh = mInitialDisplayHeight;
+            }
+
+            setForcedDisplaySize(dw > dh ? dw : dh, dw > dh ? dh : dw);
+            Settings.Secure.putString(mContext.getContentResolver(),
+                    Settings.Secure.DISPLAY_SIZE_FORCED, "");
+        }
+    }
+
+    public void getCompatFrameOffset(Point p) {
+        p.x = (mRawScreenWidth - mStandardScreenWidth) / 2;
+        p.y = (mRawScreenHeight - mStandardScreenHeight) / 2;
+    }
+
+    public int getCompatFrameOffsetX() {
+        return (mRawScreenWidth - mStandardScreenWidth) / 2;
+    }
+
+    public int getCompatFrameOffsetY() {
+        return (mRawScreenHeight - mStandardScreenHeight) / 2;
     }
 
     // It is assumed that this method is called only by InputMethodManagerService.
@@ -9827,6 +10017,8 @@ public class WindowManagerService extends IWindowManager.Stub
                     pw.print(mCurDisplayWidth); pw.print("x"); pw.print(mCurDisplayHeight);
                     pw.print(" app=");
                     pw.print(mAppDisplayWidth); pw.print("x"); pw.print(mAppDisplayHeight);
+                    pw.print(" standard=");
+                    pw.print(mStandardScreenWidth); pw.print("x"); pw.print(mStandardScreenHeight);
                     pw.print(" rng="); pw.print(mSmallestDisplayWidth);
                     pw.print("x"); pw.print(mSmallestDisplayHeight);
                     pw.print("-"); pw.print(mLargestDisplayWidth);

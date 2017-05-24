@@ -44,6 +44,7 @@
 #include <core/SkBitmap.h>
 #include <core/SkStream.h>
 #include <images/SkImageDecoder.h>
+#include <media/mediaplayer.h>
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
@@ -54,7 +55,12 @@
 #define USER_BOOTANIMATION_FILE "/data/local/bootanimation.zip"
 #define SYSTEM_BOOTANIMATION_FILE "/system/media/bootanimation.zip"
 #define SYSTEM_ENCRYPTED_BOOTANIMATION_FILE "/system/media/bootanimation-encrypted.zip"
+#define USER_SHUTDOWN_BOOTANIMATION_FILE "/data/local/shutdownanimation.zip"
+#define SYSTEM_SHUTDOWN_BOOTANIMATION_FILE "/system/media/shutdownanimation.zip"
 #define EXIT_PROP_NAME "service.bootanim.exit"
+#define BOOTMUSIC_FILE "/system/media/audio/boot.ogg"
+
+#define FIXED_ONE 1
 
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
                            const struct timespec *request,
@@ -67,10 +73,27 @@ namespace android {
 BootAnimation::BootAnimation() : Thread(false)
 {
     mSession = new SurfaceComposerClient();
+    mHardwareRotation = 0;
+    mFakeRotation = false;
+    mShutdown = false;
+    char property[PROPERTY_VALUE_MAX];
+    if (property_get("ro.sf.hwrotation", property, "0") > 0) {
+        mHardwareRotation = atoi(property);
+    }
+
+    if (property_get("ro.sf.fakerotation", property, "false") > 0) {
+        mFakeRotation = !strcmp(property, "true");
+    }
+    mReverseAxis = mFakeRotation;
 }
 
 BootAnimation::~BootAnimation() {
 }
+
+void BootAnimation::isShutdown(bool shutdown) {
+     mShutdown = shutdown;
+}
+
 
 void BootAnimation::onFirstRef() {
     status_t err = mSession->linkToComposerDeath(this);
@@ -148,6 +171,7 @@ status_t BootAnimation::initTexture(Texture* texture, AssetManager& assets,
     glTexParameterx(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterx(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterx(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     return NO_ERROR;
 }
 
@@ -179,6 +203,11 @@ status_t BootAnimation::initTexture(void* buffer, size_t len)
     int th = 1 << (31 - __builtin_clz(h));
     if (tw < w) tw <<= 1;
     if (th < h) th <<= 1;
+
+    mBMPWidth = w;
+    mBMPHeight = h;
+    mTexWidth = tw;
+    mTexHeight = th;
 
     switch (bitmap.getConfig()) {
         case SkBitmap::kARGB_8888_Config:
@@ -285,7 +314,23 @@ status_t BootAnimation::readyToRun() {
             (mZip.open(SYSTEM_BOOTANIMATION_FILE) == NO_ERROR))) {
         mAndroidAnimation = false;
     }
-
+	if (!mShutdown) {
+	   status_t err = mZip.open("/data/local/bootanimation.zip");
+	   if (err != NO_ERROR) {
+		err = mZip.open("/system/media/bootanimation.zip");
+		if (err != NO_ERROR) {
+		    mAndroidAnimation = true;
+		}
+	   }
+       } else {
+	   status_t err = mZip.open("/data/local/shutdownanimation.zip");
+	   if (err != NO_ERROR) {
+		err = mZip.open("/system/media/shutdownanimation.zip");
+	        if (err != NO_ERROR) {
+		    mAndroidAnimation = true;
+		}
+	   }
+       }
     return NO_ERROR;
 }
 
@@ -311,53 +356,157 @@ bool BootAnimation::threadLoop()
     return r;
 }
 
+void BootAnimation::getTexCoordinate() {
+
+    GLfloat w_scale = float(mBMPWidth)/mTexWidth;
+    GLfloat h_scale = float(mBMPHeight)/mTexHeight;
+
+	if (mFakeRotation) {
+		mTexCoords[0]=0;                 mTexCoords[1]=FIXED_ONE*h_scale;
+		mTexCoords[2]=0;                 mTexCoords[3]=0;
+		mTexCoords[4]=FIXED_ONE*w_scale; mTexCoords[5]=0;
+		mTexCoords[6]=FIXED_ONE*w_scale; mTexCoords[7]=FIXED_ONE*h_scale;
+	} else {
+		mTexCoords[0]=0;                 mTexCoords[1]=0;
+		mTexCoords[2]=FIXED_ONE*w_scale; mTexCoords[3]=0;
+		mTexCoords[4]=FIXED_ONE*w_scale; mTexCoords[5]=FIXED_ONE*h_scale;
+		mTexCoords[6]=0;                 mTexCoords[7]=FIXED_ONE*h_scale;
+	}
+}
+
+void BootAnimation::playMusic()
+{
+    sp<MediaPlayer> mp = new MediaPlayer();
+    if ((0 == access(BOOTMUSIC_FILE, F_OK)) && mp != NULL) {
+        mp->setDataSource(BOOTMUSIC_FILE, NULL);
+        mp->prepare();
+        mp->start();
+    }
+}
+
+
 bool BootAnimation::android()
 {
     initTexture(&mAndroid[0], mAssets, "images/android-logo-mask.png");
     initTexture(&mAndroid[1], mAssets, "images/android-logo-shine.png");
+    mBMPWidth = mTexWidth = mBMPHeight = mTexHeight = 1;
+    getTexCoordinate();
+    int first = true;
 
     // clear screen
     glShadeModel(GL_FLAT);
     glDisable(GL_DITHER);
+    glViewport(0, 0, mWidth, mHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float ratio = mWidth / mHeight;
+    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glOrthof(0, mWidth, mHeight, 0, 0, 1);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisable(GL_SCISSOR_TEST);
+
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
     eglSwapBuffers(mDisplay, mSurface);
-
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-    const GLint xc = (mWidth  - mAndroid[0].w) / 2;
-    const GLint yc = (mHeight - mAndroid[0].h) / 2;
-    const Rect updateRect(xc, yc, xc + mAndroid[0].w, yc + mAndroid[0].h);
-
-    glScissor(updateRect.left, mHeight - updateRect.bottom, updateRect.width(),
-            updateRect.height());
 
     // Blend state
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+    if (mReverseAxis) {
+        exchangeParameters(&mWidth, &mHeight);
+    }
+
+    GLfloat xc = float(mWidth  - mAndroid[0].w) / 2;
+    GLfloat yc = float(mHeight - mAndroid[0].h) / 2;
+
+    if (mReverseAxis) {
+        exchangeParameters(&xc, &yc);
+        exchangeParameters(&mAndroid[0].w, &mAndroid[0].h);
+        exchangeParameters(&mAndroid[1].w, &mAndroid[1].h);
+    }
+
+	const GLfloat mask_vertices[] = {
+			xc, yc, 0,
+			xc+mAndroid[0].w, yc, 0,
+			xc+mAndroid[0].w, yc+mAndroid[0].h, 0,
+			xc, yc+mAndroid[0].h, 0
+	};
+
+	const GLfloat shine_vertices[] = {
+			xc, yc, 0,
+			xc+mAndroid[1].w, yc, 0,
+			xc+mAndroid[1].w, yc+mAndroid[1].h, 0,
+			xc, yc+mAndroid[1].h, 0
+	};
+
+	const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
+	int nelem = sizeof(indices)/sizeof(indices[0]);
+
+    const Rect updateRect(xc, yc, xc + mAndroid[0].w, yc + mAndroid[0].h);
+    glScissor(updateRect.left, updateRect.top, updateRect.width(),
+            updateRect.height());
+
     const nsecs_t startTime = systemTime();
     do {
         nsecs_t now = systemTime();
         double time = now - startTime;
-        float t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].w;
-        GLint offset = (1 - (t - floorf(t))) * mAndroid[1].w;
-        GLint x = xc - offset;
+        float t = 0;
+        GLint x, y, offset;
+
+        if (mReverseAxis) {
+            t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].h;
+            offset = (1 - (t - floorf(t))) * mAndroid[1].h;
+            y = yc - offset;
+        } else {
+            t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].w;
+            offset = (1 - (t - floorf(t))) * mAndroid[1].w;
+            x = xc - offset;
+        }
+
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+
 
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
-
         glEnable(GL_SCISSOR_TEST);
+
+        if (mReverseAxis) {
+            glTranslatef(0, -offset, 0);
+        } else {
+            glTranslatef(-offset, 0, 0);
+        }
         glDisable(GL_BLEND);
         glBindTexture(GL_TEXTURE_2D, mAndroid[1].name);
-        glDrawTexiOES(x,                 yc, 0, mAndroid[1].w, mAndroid[1].h);
-        glDrawTexiOES(x + mAndroid[1].w, yc, 0, mAndroid[1].w, mAndroid[1].h);
+        glVertexPointer(3, GL_FLOAT, 0, shine_vertices);
+        glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
+        if (mReverseAxis) {
+            glTranslatef(0, mAndroid[1].h, 0);
+        } else {
+            glTranslatef(mAndroid[1].w, 0, 0);
+        }
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
+        if (mReverseAxis) {
+            glTranslatef(0, offset - mAndroid[1].h, 0);
+        } else {
+            glTranslatef(offset - mAndroid[1].w, 0, 0);
+        }
 
         glEnable(GL_BLEND);
         glBindTexture(GL_TEXTURE_2D, mAndroid[0].name);
-        glDrawTexiOES(xc, yc, 0, mAndroid[0].w, mAndroid[0].h);
+        glVertexPointer(3, GL_FLOAT, 0, mask_vertices);
+        glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
 
         EGLBoolean res = eglSwapBuffers(mDisplay, mSurface);
         if (res == EGL_FALSE)
@@ -379,6 +528,10 @@ bool BootAnimation::android()
 
 void BootAnimation::checkExit() {
     // Allow surface flinger to gracefully request shutdown
+    if(mShutdown)//shutdown animation
+	{
+	return;
+	}
     char value[PROPERTY_VALUE_MAX];
     property_get(EXIT_PROP_NAME, value, "0");
     int exitnow = atoi(value);
@@ -389,6 +542,9 @@ void BootAnimation::checkExit() {
 
 bool BootAnimation::movie()
 {
+#ifdef BOOTMUSIC_FILE
+    playMusic();
+#endif
     ZipFileRO& zip(mZip);
 
     size_t numEntries = zip.getNumEntries();
@@ -416,8 +572,13 @@ bool BootAnimation::movie()
         char pathType;
         if (sscanf(l, "%d %d %d", &width, &height, &fps) == 3) {
             //LOGD("> w=%d, h=%d, fps=%d", width, height, fps);
-            animation.width = width;
-            animation.height = height;
+            if (mReverseAxis) {
+                animation.width = height;
+                animation.height = width;
+            } else {
+                animation.width = width;
+                animation.height = height;
+            }
             animation.fps = fps;
         }
         else if (sscanf(l, " %c %d %d %s", &pathType, &count, &pause, path) == 4) {
@@ -468,11 +629,22 @@ bool BootAnimation::movie()
     // clear screen
     glShadeModel(GL_FLAT);
     glDisable(GL_DITHER);
+    glViewport(0, 0, mWidth, mHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float ratio = mWidth / mHeight;
+    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glOrthof(0, mWidth, mHeight, 0, 0, 1);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_BLEND);
+
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
-
     eglSwapBuffers(mDisplay, mSurface);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -490,6 +662,16 @@ bool BootAnimation::movie()
 
     Region clearReg(Rect(mWidth, mHeight));
     clearReg.subtractSelf(Rect(xc, yc, xc+animation.width, yc+animation.height));
+
+    const GLfloat vertices[] = {
+            xc, yc, 0,
+            xc+animation.width, yc, 0,
+            xc+animation.width, yc+animation.height, 0,
+            xc, yc+animation.height, 0
+    };
+
+    const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
+    int nelem = sizeof(indices)/sizeof(indices[0]);
 
     for (int i=0 ; i<pcount ; i++) {
         const Animation::Part& part(animation.parts[i]);
@@ -517,7 +699,10 @@ bool BootAnimation::movie()
                     initTexture(
                             frame.map->getDataPtr(),
                             frame.map->getDataLength());
+
+                    getTexCoordinate();
                 }
+
 
                 if (!clearReg.isEmpty()) {
                     Region::const_iterator head(clearReg.begin());
@@ -531,7 +716,11 @@ bool BootAnimation::movie()
                     }
                     glDisable(GL_SCISSOR_TEST);
                 }
-                glDrawTexiOES(xc, yc, 0, animation.width, animation.height);
+
+                glVertexPointer(3, GL_FLOAT, 0, vertices);
+                glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+                glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
                 eglSwapBuffers(mDisplay, mSurface);
 
                 nsecs_t now = systemTime();

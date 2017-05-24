@@ -1151,6 +1151,9 @@ class BrowserFrame extends Handler {
                 // mimeType string end with a '.', not much to do
             }
         }
+        // add by cmc for fix send intent when access wml page
+        if ("text/vnd.wap.wml".equals(mimeType)) 
+            contentDisposition = "attachment";
         mimeType = MimeTypeMap.getSingleton().remapGenericMimeType(
                 mimeType, url, contentDisposition);
 

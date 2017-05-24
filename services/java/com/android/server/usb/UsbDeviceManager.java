@@ -183,7 +183,8 @@ public class UsbDeviceManager {
         if (volumes.length > 0) {
             massStorageSupported = volumes[0].allowMassStorage();
         }
-        mUseUsbNotification = !massStorageSupported;
+        //mUseUsbNotification = !massStorageSupported;
+        mUseUsbNotification = true;
 
         // make sure the ADB_ENABLED setting value matches the current state
         Settings.Secure.putInt(mContentResolver, Settings.Secure.ADB_ENABLED, mAdbEnabled ? 1 : 0);
@@ -524,13 +525,26 @@ public class UsbDeviceManager {
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(UsbManager.USB_CONNECTED, mConnected);
             intent.putExtra(UsbManager.USB_CONFIGURED, mConfigured);
+            boolean isMassStorage = false;
 
             if (mCurrentFunctions != null) {
                 String[] functions = mCurrentFunctions.split(",");
                 for (int i = 0; i < functions.length; i++) {
+                    if(mAdbEnabled && (functions[i].equals(UsbManager.USB_FUNCTION_MTP)
+							            || functions[i].equals(UsbManager.USB_FUNCTION_PTP)))
+						continue;
+                    if (functions[i].equals(UsbManager.USB_FUNCTION_MASS_STORAGE))
+                        isMassStorage = true; 
                     intent.putExtra(functions[i], true);
                 }
             }
+            if (mConnected && mConfigured && isMassStorage)
+                SystemProperties.set("sys.ums.connected", "true");
+            //mod by cjf
+            //else if (isMassStorage)
+            else
+
+                SystemProperties.set("sys.ums.connected", "false");
 
             mContext.sendStickyBroadcast(intent);
         }
@@ -598,6 +612,7 @@ public class UsbDeviceManager {
                     break;
                 case MSG_BOOT_COMPLETED:
                     mBootCompleted = true;
+                    updateUsbState();
                     if (mCurrentAccessory != null) {
                         mSettingsManager.accessoryAttached(mCurrentAccessory);
                     }
@@ -620,7 +635,7 @@ public class UsbDeviceManager {
                     id = com.android.internal.R.string.usb_ptp_notification_title;
                 } else if (containsFunction(mCurrentFunctions,
                         UsbManager.USB_FUNCTION_MASS_STORAGE)) {
-                    id = com.android.internal.R.string.usb_cd_installer_notification_title;
+                    id = 0;//com.android.internal.R.string.usb_cd_installer_notification_title;
                 } else if (containsFunction(mCurrentFunctions, UsbManager.USB_FUNCTION_ACCESSORY)) {
                     id = com.android.internal.R.string.usb_accessory_notification_title;
                 } else {

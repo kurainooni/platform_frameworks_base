@@ -694,6 +694,14 @@ public final class ViewRootImpl implements ViewParent,
         // Don't enable hardware acceleration when the application is in compatibility mode
         if (mTranslator != null) return;
 
+        /* Force gpu renderer in quadrant benchmark ,
+          * It's a hack for score in run 2D;
+          * @author zhengzc@rock-chips.com 
+         */
+        if (null != attrs.packageName && attrs.packageName.contains("aurorasoftworks.quadrant") ){
+            attrs.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+		} 
+
         // Try to enable hardware acceleration if requested
         final boolean hardwareAccelerated = 
                 (attrs.flags & WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED) != 0;

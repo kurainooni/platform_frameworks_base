@@ -44,6 +44,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Process;
+import android.os.SystemProperties;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -60,6 +61,7 @@ import com.android.systemui.R;
 
 import java.io.File;
 import java.io.OutputStream;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -173,7 +175,19 @@ class SaveImageInBackgroundTask extends AsyncTask<SaveImageInBackgroundData, Voi
         Resources r = context.getResources();
 
         try {
-            // Save the screenshot to the MediaStore
+
+	/*just for get pic size,because SystemUi can not access sdcard*/
+	String path = "/mnt/sdcard/" + mImageFileName;
+	File f = new File(path);
+	f.createNewFile();
+	FileOutputStream test_out = new FileOutputStream(f);
+	image.compress(Bitmap.CompressFormat.PNG, 100, test_out);
+	test_out.flush();
+	test_out.close();
+	long len=f.length();
+	f.delete();
+
+	// Save the screenshot to the MediaStore
             ContentValues values = new ContentValues();
             ContentResolver resolver = context.getContentResolver();
             values.put(MediaStore.Images.ImageColumns.DATA, mImageFilePath);
@@ -183,6 +197,7 @@ class SaveImageInBackgroundTask extends AsyncTask<SaveImageInBackgroundData, Voi
             values.put(MediaStore.Images.ImageColumns.DATE_ADDED, mImageTime);
             values.put(MediaStore.Images.ImageColumns.DATE_MODIFIED, mImageTime);
             values.put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/png");
+	    values.put(MediaStore.Images.ImageColumns.SIZE, len);
             Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
             Intent sharingIntent = new Intent(Intent.ACTION_SEND);
@@ -198,7 +213,7 @@ class SaveImageInBackgroundTask extends AsyncTask<SaveImageInBackgroundData, Voi
                      PendingIntent.getActivity(context, 0, chooserIntent, 
                              PendingIntent.FLAG_CANCEL_CURRENT));
 
-            OutputStream out = resolver.openOutputStream(uri);
+/*            OutputStream out = resolver.openOutputStream(uri);
             image.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
@@ -206,7 +221,11 @@ class SaveImageInBackgroundTask extends AsyncTask<SaveImageInBackgroundData, Voi
             // update file size in the database
             values.clear();
             values.put(MediaStore.Images.ImageColumns.SIZE, new File(mImageFilePath).length());
-            resolver.update(uri, values, null, null);
+            resolver.update(uri, values, null, null);*/
+	    OutputStream out = resolver.openOutputStream(uri);
+	    image.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
 
             params[0].imageUri = uri;
             params[0].result = 0;
@@ -214,6 +233,7 @@ class SaveImageInBackgroundTask extends AsyncTask<SaveImageInBackgroundData, Voi
             // IOException/UnsupportedOperationException may be thrown if external storage is not
             // mounted
             params[0].result = 1;
+	    e.printStackTrace();
         }
 
         return params[0];
@@ -290,7 +310,7 @@ class GlobalScreenshot {
     private float mBgPaddingScale;
 
     private MediaActionSound mCameraSound;
-
+    private int mHardwareRotation = 0;
 
     /**
      * @param context everything needs a context :(
@@ -344,6 +364,7 @@ class GlobalScreenshot {
         // Setup the Camera shutter sound
         mCameraSound = new MediaActionSound();
         mCameraSound.load(MediaActionSound.SHUTTER_CLICK);
+        mHardwareRotation = SystemProperties.getInt("ro.sf.hwrotation",0) / 90;
     }
 
     /**
@@ -363,6 +384,10 @@ class GlobalScreenshot {
      * @return the current display rotation in degrees
      */
     private float getDegreesForRotation(int value) {
+        if (mHardwareRotation % 2 != 0) {
+            value = (value + mHardwareRotation) % 4;
+        }
+
         switch (value) {
         case Surface.ROTATION_90:
             return 360f - 90f;

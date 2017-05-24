@@ -56,6 +56,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.WorkSource;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Slog;
@@ -129,6 +130,8 @@ public class WifiService extends IWifiManager.Stub {
     private int mDataActivity;
     private String mInterfaceName;
 
+    private PowerManager.WakeLock mWifiWakeLock;
+
     /**
      * Interval in milliseconds between polling for traffic
      * statistics
@@ -142,7 +145,7 @@ public class WifiService extends IWifiManager.Stub {
      * being enabled but not active exceeds the battery drain caused by
      * re-establishing a connection to the mobile data network.
      */
-    private static final long DEFAULT_IDLE_MS = 15 * 60 * 1000; /* 15 minutes */
+    private static final long DEFAULT_IDLE_MS = 3 * 60 * 1000; /* 15 minutes */
 
     private static final String ACTION_DEVICE_IDLE =
             "com.android.server.WifiManager.action.DEVICE_IDLE";
@@ -370,6 +373,10 @@ public class WifiService extends IWifiManager.Stub {
         mAlarmManager = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
         Intent idleIntent = new Intent(ACTION_DEVICE_IDLE, null);
         mIdleIntent = PendingIntent.getBroadcast(mContext, IDLE_REQUEST, idleIntent, 0);
+
+        final PowerManager powerManager = (PowerManager) context.getSystemService(
+                Context.POWER_SERVICE);
+        mWifiWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
         mContext.registerReceiver(
                 new BroadcastReceiver() {
@@ -970,6 +977,12 @@ public class WifiService extends IWifiManager.Stub {
                 if (DBG) {
                     Slog.d(TAG, "ACTION_SCREEN_OFF");
                 }
+
+                if(!mWifiWakeLock.isHeld()) {
+                    Slog.d(TAG, "---- mWifiWakeLock.acquire ----");
+                    mWifiWakeLock.acquire();
+                }
+
                 mScreenOff = true;
                 evaluateTrafficStatsPolling();
                 /*
@@ -985,7 +998,11 @@ public class WifiService extends IWifiManager.Stub {
                         mAlarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
                                 + idleMillis, mIdleIntent);
                     } else {
-                        setDeviceIdleAndUpdateWifi(true);
+                        //setDeviceIdleAndUpdateWifi(true);
+                        idleMillis = 2 * 60 * 1000; // 2 minutes
+                        if (DBG) Slog.d(TAG, "setting ACTION_DEVICE_IDLE: " + idleMillis + " ms");
+                        mAlarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
+                                + idleMillis, mIdleIntent);
                     }
                 }
             } else if (action.equals(ACTION_DEVICE_IDLE)) {
@@ -1039,7 +1056,7 @@ public class WifiService extends IWifiManager.Stub {
             //Never sleep as long as the user has not changed the settings
             int wifiSleepPolicy = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.WIFI_SLEEP_POLICY,
-                    Settings.System.WIFI_SLEEP_POLICY_NEVER);
+                    Settings.System.WIFI_SLEEP_POLICY_DEFAULT);
 
             if (wifiSleepPolicy == Settings.System.WIFI_SLEEP_POLICY_NEVER) {
                 // Never sleep
@@ -1050,7 +1067,9 @@ public class WifiService extends IWifiManager.Stub {
                 return true;
             } else {
                 // Default
-                return shouldDeviceStayAwake(stayAwakeConditions, pluggedType);
+                //return shouldDeviceStayAwake(stayAwakeConditions, pluggedType);
+				// modify to enable deep sleep while wifi is on.
+				return false;
             }
         }
 
@@ -1077,6 +1096,10 @@ public class WifiService extends IWifiManager.Stub {
         mDeviceIdle = deviceIdle;
         reportStartWorkSource();
         updateWifiState();
+        if(mWifiWakeLock.isHeld()) {
+            Slog.d(TAG, "---- mWifiWakeLock.release ----");
+            mWifiWakeLock.release();
+        }
     }
 
     private synchronized void reportStartWorkSource() {

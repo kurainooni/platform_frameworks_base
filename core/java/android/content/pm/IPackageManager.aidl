@@ -346,7 +346,8 @@ interface IPackageManager {
      * MountService uses this to call into the package manager to update
      * status of sdcard.
      */
-    void updateExternalMediaStatus(boolean mounted, boolean reportStatus);
+//    void updateExternalMediaStatus(boolean mounted, boolean reportStatus);
+    void updateExternalMediaStatus(String path,boolean mounted, boolean reportStatus);
 
     String nextPackageToClean(String lastPackage);
 
@@ -379,4 +380,7 @@ interface IPackageManager {
 
     /** Reflects current DeviceStorageMonitorService state */
     boolean isStorageLow();
+
+    int getPackageHardwareAccMode(String pkgName);
+    void setPackageHardwareAccMode(String pkgName, int mode);
 }

@@ -1339,6 +1339,9 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                                                         "" : " - " + imiLabel))
                             : imiLabel;
 
+                    //add by cjf, to hide from icons.
+                    mImeSwitcherNotification.priority = Notification.PRIORITY_MIN;
+
                     mImeSwitcherNotification.setLatestEventInfo(
                             mContext, title, summary, mImeSwitchPendingIntent);
                     if (mNotificationManager != null) {

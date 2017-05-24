@@ -43,20 +43,36 @@ public class MtpServer implements Runnable {
         native_cleanup();
     }
 
-    public void sendObjectAdded(int handle) {
-        native_send_object_added(handle);
+    public void sendObjectAdded(final int handle) {
+		new Thread() {
+			public void run() {
+        		native_send_object_added(handle);
+			}
+		}.start();
     }
 
-    public void sendObjectRemoved(int handle) {
-        native_send_object_removed(handle);
+    public void sendObjectRemoved(final int handle) {
+		new Thread() {
+			public void run() {
+        		native_send_object_removed(handle);
+			}
+		}.start();
     }
 
-    public void addStorage(MtpStorage storage) {
-        native_add_storage(storage);
+    public void addStorage(final MtpStorage storage) {
+		new Thread() {
+			public void run() {
+        		native_add_storage(storage);
+			}
+		}.start();
     }
 
-    public void removeStorage(MtpStorage storage) {
-        native_remove_storage(storage.getStorageId());
+    public void removeStorage(final MtpStorage storage) {
+		new Thread() {
+			public void run() {
+        		native_remove_storage(storage.getStorageId());
+			}
+		}.start();
     }
 
     private native final void native_setup(MtpDatabase database, boolean usePtp);

@@ -39,6 +39,7 @@ import android.view.InputChannel;
 import android.view.Surface;
 import android.view.SurfaceSession;
 import android.view.WindowManager;
+import android.util.Log;
 
 import java.io.PrintWriter;
 
@@ -171,7 +172,11 @@ final class Session extends IWindowSession.Stub
     public boolean outOfMemory(IWindow window) {
         return mService.outOfMemoryWindow(this, window);
     }
-
+   //>>>add by rk
+   public void setInvisiableRegionScreen(IWindow window, Region region) {
+        mService.setInvisiableRegionScreen(this, window, region);
+   }
+  //<<<<<<
     public void setTransparentRegion(IWindow window, Region region) {
         mService.setTransparentRegionWindow(this, window, region);
     }
@@ -204,6 +209,55 @@ final class Session extends IWindowSession.Stub
         }
     }
 
+	public void hideWindowLayer(IWindow window, boolean flag)
+		{
+			long origId = Binder.clearCallingIdentity();
+			synchronized(mService.mWindowMap) {
+				WindowState win = mService.windowForClientLocked(this, window, false);
+				if (win == null) {
+					return;
+				}
+				
+				Surface.openTransaction();
+				if(win.mWinAnimator.mSurface != null)
+				{
+					if (flag){
+						win.mWinAnimator.mSurfaceShown = false;
+						win.mWinAnimator.mSurface.hide();
+						//win.mAppHideSurface = true;
+					}else{
+						win.mWinAnimator.mSurfaceShown = true;
+						win.mWinAnimator.mSurface.show();
+						//win.mAppHideSurface = false;
+					}	
+				}
+				Surface.closeTransaction();
+			}
+			Binder.restoreCallingIdentity(origId);
+		}
+
+	public void updatePositionAndSize(IWindow window,int x,int y,int width,int height){
+	 long origId = Binder.clearCallingIdentity();
+                        synchronized(mService.mWindowMap) {
+                                WindowState win = mService.windowForClientLocked(this, window, false);
+                                if (win == null) {
+                                        return;
+                                }
+				win.mWinAnimator.mLastHidden = true;
+				if(win.mAttachedWindow != null)
+				win.mAttachedWindow.mWinAnimator.mLastHidden = true;
+                                Surface.openTransaction();
+                                if(win.mWinAnimator.mSurface != null){
+					win.mWinAnimator.mSurface.setPosition(x,y);
+					win.mWinAnimator.mSurface.setSize(width,height);
+					win.mWinAnimator.mSurface.setWindowCrop(new Rect(0,0,width,height));
+					win.mRequestedWidth = width;
+					win.mRequestedHeight = height;
+                                }
+                                Surface.closeTransaction();
+                        }
+                        Binder.restoreCallingIdentity(origId);
+	}
     public boolean performHapticFeedback(IWindow window, int effectId,
             boolean always) {
         synchronized(mService.mWindowMap) {

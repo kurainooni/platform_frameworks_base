@@ -67,6 +67,11 @@ import android.net.nsd.INsdManager;
 import android.net.nsd.NsdManager;
 import android.net.wifi.IWifiManager;
 import android.net.wifi.WifiManager;
+//$_rbox_$_modify_$_chenzhi_20120309
+//$_rbox_$_modify_$_begin
+import android.net.ethernet.EthernetManager;
+import android.net.ethernet.IEthernetManager;
+//$_rbox_$_modify_$_end
 import android.net.wifi.p2p.IWifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.nfc.NfcManager;
@@ -481,6 +486,15 @@ class ContextImpl extends Context {
                     return new WifiP2pManager(service);
                 }});
 
+//$_rbox_$_modify_$_chenzhi_20120309: for ethernet service
+//$_rbox_$_modify_$ begin
+		registerService(ETHERNET_SERVICE, new ServiceFetcher() {
+				public Object createService(ContextImpl ctx) {
+					IBinder b = ServiceManager.getService(ETHERNET_SERVICE);
+					IEthernetManager service = IEthernetManager.Stub.asInterface(b);
+					return new EthernetManager(service, ctx.mMainThread.getHandler());
+				}});
+//$_rbox_$_modify_$ end
         registerService(WINDOW_SERVICE, new ServiceFetcher() {
                 public Object getService(ContextImpl ctx) {
                     return WindowManagerImpl.getDefault(ctx.mPackageInfo.mCompatibilityInfo);

@@ -133,9 +133,9 @@ void SensorService::onFirstRef()
                 // if we have the fancy sensor fusion, and it's not provided by the
                 // HAL, use our own (fused) orientation sensor by removing the
                 // HAL supplied one form the user list.
-                if (orientationIndex >= 0) {
+                /*if (orientationIndex >= 0) {
                     mUserSensorList.removeItemsAt(orientationIndex);
-                }
+                }*/
             }
 
             run("SensorService", PRIORITY_URGENT_DISPLAY);

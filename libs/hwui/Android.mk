@@ -39,6 +39,19 @@ ifeq ($(USE_OPENGL_RENDERER),true)
 		external/skia/src/ports \
 		external/skia/include/utils
 
+    ifeq ($(strip $(TARGET_BOARD_HARDWARE)),rk29board)
+    LOCAL_CFLAGS += -DTARGET_RK2918
+    endif
+
+    ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk30xx)
+    LOCAL_CFLAGS += -DTARGET_GPU_MALI400
+    endif
+
+    ifeq ($(strip $(TARGET_BOARD_HARDWARE)),rk2928board)
+	LOCAL_CFLAGS += -DTARGET_GPU_MALI400
+	endif
+
+
 	LOCAL_CFLAGS += -DUSE_OPENGL_RENDERER -DGL_GLEXT_PROTOTYPES
 	LOCAL_CFLAGS += -fvisibility=hidden
 	LOCAL_MODULE_CLASS := SHARED_LIBRARIES

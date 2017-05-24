@@ -124,7 +124,8 @@ class HTML5Audio extends Handler
                 try {
                     if (mState != ERROR && mMediaPlayer.isPlaying()) {
                         int position = mMediaPlayer.getCurrentPosition();
-                        nativeOnTimeupdate(position, mNativePointer);
+						int duration = mMediaPlayer.getDuration();
+                        nativeOnTimeupdate(position, duration, mNativePointer);
                     }
                 } catch (IllegalStateException e) {
                     mState = ERROR;
@@ -178,7 +179,7 @@ class HTML5Audio extends Handler
 
     // MediaPlayer.OnSeekCompleteListener
     public void onSeekComplete(MediaPlayer mp) {
-        nativeOnTimeupdate(mp.getCurrentPosition(), mNativePointer);
+        nativeOnTimeupdate(mp.getCurrentPosition(), mp.getDuration(), mNativePointer);
     }
 
 
@@ -339,6 +340,6 @@ class HTML5Audio extends Handler
     private native void nativeOnEnded(int nativePointer);
     private native void nativeOnRequestPlay(int nativePointer);
     private native void nativeOnPrepared(int duration, int width, int height, int nativePointer);
-    private native void nativeOnTimeupdate(int position, int nativePointer);
+    private native void nativeOnTimeupdate(int position, int duration, int nativePointer);
 
 }

@@ -634,6 +634,11 @@ class WindowStateAnimator {
                 if (!PixelFormat.formatHasAlpha(attrs.format)) {
                     flags |= Surface.OPAQUE;
                 }
+//>>>>add by qiuen
+              if(attrs.treatTransparentAsInvisiable != 0){
+                                       flags |= Surface.TREATTRANSPARENTASINVISIABLE;
+                               }
+//<<<<
                 if (DEBUG_SURFACE_TRACE) {
                     mSurface = new SurfaceTrace(
                             mSession.mSurfaceSession, mSession.mPid,
@@ -963,7 +968,14 @@ class WindowStateAnimator {
             w.mSystemDecorRect.set(0, 0, w.mCompatFrame.width(),
                     w.mCompatFrame.height());
         } else {
-            final Rect decorRect = mService.mSystemDecorRect;
+            Rect decorRect = mService.mSystemDecorRect;
+            if (mService.isRunningInCompatibilityMode()) {
+                Point p = new Point();
+                mService.getCompatFrameOffset(p);
+                int offsetX = p.x;
+                int offsetY = p.y;
+                decorRect.offset(offsetX, offsetY);
+            }
             // Compute the offset of the window in relation to the decor rect.
             final int offX = w.mXOffset + w.mFrame.left;
             final int offY = w.mYOffset + w.mFrame.top;

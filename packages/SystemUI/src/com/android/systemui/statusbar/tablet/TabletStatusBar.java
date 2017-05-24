@@ -81,6 +81,8 @@ import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.NotificationRowLayout;
 import com.android.systemui.statusbar.policy.Prefs;
 
+import android.os.storage.StorageManager;
+import com.android.internal.statusbar.StatusBarNotification;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -93,6 +95,7 @@ public class TabletStatusBar extends BaseStatusBar implements
     public static final String TAG = "TabletStatusBar";
 
 
+    public static  boolean HIDE_TABLET_STATUSBAR=false;
     public static final int MSG_OPEN_NOTIFICATION_PANEL = 1000;
     public static final int MSG_CLOSE_NOTIFICATION_PANEL = 1001;
     public static final int MSG_OPEN_NOTIFICATION_PEEK = 1002;
@@ -126,6 +129,9 @@ public class TabletStatusBar extends BaseStatusBar implements
     private int mMaxNotificationIcons = 5;
 
     IWindowManager mWindowManager;
+
+  // storage
+    private StorageManager mStorageManager;
 
     TabletStatusBarView mStatusBarView;
     View mNotificationArea;
@@ -393,6 +399,8 @@ public class TabletStatusBar extends BaseStatusBar implements
     @Override
     public void start() {
         super.start(); // will add the main bar view
+	  mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
+     mStorageManager.registerListener(new com.android.systemui.usb.StorageNotification(mContext));
     }
 
     @Override
@@ -842,6 +850,7 @@ public class TabletStatusBar extends BaseStatusBar implements
                     mBarContents.setVisibility(View.VISIBLE);
                     mShadow.setVisibility(View.GONE);
                     mSystemUiVisibility &= ~View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                    mStatusBarView.setVisibility(View.VISIBLE);
                     notifyUiVisibilityChanged();
                     break;
                 case MSG_HIDE_CHROME:
@@ -851,6 +860,11 @@ public class TabletStatusBar extends BaseStatusBar implements
                     mBarContents.setVisibility(View.GONE);
                     mShadow.setVisibility(View.VISIBLE);
                     mSystemUiVisibility |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                    if(HIDE_TABLET_STATUSBAR){
+                        mStatusBarView.setVisibility(View.GONE);
+                    }else{
+                        mStatusBarView.setVisibility(View.VISIBLE);
+                    }
                     notifyUiVisibilityChanged();
                     break;
                 case MSG_STOP_TICKER:
@@ -1080,19 +1094,25 @@ public class TabletStatusBar extends BaseStatusBar implements
 
     @Override // CommandQueue
     public void setSystemUiVisibility(int vis, int mask) {
-        final int oldVal = mSystemUiVisibility;
-        final int newVal = (oldVal&~mask) | (vis&mask);
-        final int diff = newVal ^ oldVal;
-
-        if (diff != 0) {
-            mSystemUiVisibility = newVal;
-
-            if (0 != (diff & View.SYSTEM_UI_FLAG_LOW_PROFILE)) {
+       // final int oldVal = mSystemUiVisibility;
+       // final int newVal = (oldVal&~mask) | (vis&mask);
+      //  final int diff = newVal ^ oldVal;
+          
+          if (vis != mSystemUiVisibility) {
+            mSystemUiVisibility = vis;
+           // if (0 != (diff & View.SYSTEM_UI_FLAG_LOW_PROFILE)) {
                 mHandler.removeMessages(MSG_HIDE_CHROME);
                 mHandler.removeMessages(MSG_SHOW_CHROME);
-                mHandler.sendEmptyMessage(0 == (vis & View.SYSTEM_UI_FLAG_LOW_PROFILE)
-                        ? MSG_SHOW_CHROME : MSG_HIDE_CHROME);
-            }
+                int fs = vis & View.SYSTEM_UI_FLAG_SHOW_FULLSCREEN;
+                int lp =  vis & View.SYSTEM_UI_FLAG_LOW_PROFILE;
+                if(fs != 0){
+                     HIDE_TABLET_STATUSBAR = true;
+                }else{
+                     HIDE_TABLET_STATUSBAR = false;
+                }
+             
+                mHandler.sendEmptyMessage((lp!=0||fs != 0) ? MSG_HIDE_CHROME : MSG_SHOW_CHROME);
+          //  }
 
             notifyUiVisibilityChanged();
         }
@@ -1563,6 +1583,10 @@ public class TabletStatusBar extends BaseStatusBar implements
                 mIconLayout.addView(v, i, params);
             }
         }
+				if(toShow.size()>0)
+				{
+					mFeedbackIconArea.setVisibility(View.VISIBLE);
+				}
     }
 
     private void loadNotificationPanel() {

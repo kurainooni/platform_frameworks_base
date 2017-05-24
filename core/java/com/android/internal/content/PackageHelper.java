@@ -76,7 +76,7 @@ public class PackageHelper {
             if (localLOGV)
                 Log.i(TAG, "Size of container " + sizeMb + " MB");
 
-            int rc = mountService.createSecureContainer(cid, sizeMb, "ext4", sdEncKey, uid,
+            int rc = mountService.createSecureContainer(cid, sizeMb, "fat", sdEncKey, uid,
                     isExternal);
             if (rc != StorageResultCode.OperationSucceeded) {
                 Log.e(TAG, "Failed to create secure container " + cid);
@@ -149,7 +149,13 @@ public class PackageHelper {
    public static String getSdFilesystem(String cid) {
        try {
             return getMountService().getSecureContainerFilesystemPath(cid);
-        } catch (RemoteException e) {
+        }
+	   	catch(IllegalStateException e)
+		{
+            Log.e(TAG, "Failed to get container path for " + cid +
+                " with exception " + e);
+		}
+	    catch (RemoteException e) {
             Log.e(TAG, "Failed to get container path for " + cid +
                 " with exception " + e);
         }

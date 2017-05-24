@@ -10,6 +10,7 @@ import android.webkit.HTML5VideoViewProxy;
 import android.view.Surface;
 import android.opengl.GLES20;
 import android.os.PowerManager;
+import android.util.Log;
 
 /**
  * @hide This is only used by the browser
@@ -21,10 +22,14 @@ public class HTML5VideoInline extends HTML5VideoView{
     // associated with the surface texture can be used for showing the screen
     // shot when paused, so they are not singleton.
     private static SurfaceTexture mSurfaceTexture = null;
-    private static int[] mTextureNames = null;
+    private int[] mTextureNames;
     // Every time when the VideoLayer Id change, we need to recreate the
     // SurfaceTexture in order to delete the old video's decoder memory.
     private static int mVideoLayerUsingSurfaceTexture = -1;
+	private static String LOG = "HTML5VideoInline";
+	public static void LOGD(String msg){
+			Log.d(LOG,msg);
+	}
 
     // Video control FUNCTIONS:
     @Override
@@ -34,16 +39,23 @@ public class HTML5VideoInline extends HTML5VideoView{
         }
     }
 
-    HTML5VideoInline(int videoLayerId, int position) {
-        init(videoLayerId, position, false);
+    HTML5VideoInline(HTML5VideoViewProxy proxy ,int videoLayerId, int position,
+            boolean autoStart,int current_state) {
+           // LOGD("mMediaPlayer="+mMediaPlayer);
+        init(proxy,videoLayerId, position, autoStart,current_state);
+        mTextureNames = null;
     }
 
     @Override
     public void decideDisplayMode() {
         SurfaceTexture surfaceTexture = getSurfaceTexture(getVideoLayerId());
         Surface surface = new Surface(surfaceTexture);
+		if(DebugFlags.WEB_HTML5)
+			LOGD("decideDisplayMode surface="+surface+" surfacetexture="+surfaceTexture);
+		
+		mProxy.SetInlineSurface(surface);
         mPlayer.setSurface(surface);
-        surface.release();
+        //surface.release();
     }
 
     // Normally called immediately after setVideoURI. But for full screen,
@@ -68,18 +80,22 @@ public class HTML5VideoInline extends HTML5VideoView{
 
     // Inline Video specific FUNCTIONS:
 
-    public static SurfaceTexture getSurfaceTexture(int videoLayerId) {
+    @Override
+    public SurfaceTexture getSurfaceTexture(int videoLayerId) {
         // Create the surface texture.
         if (videoLayerId != mVideoLayerUsingSurfaceTexture
             || mSurfaceTexture == null
             || mTextureNames == null) {
-            // The GL texture will store in the VideoLayerManager at native side.
-            // They will be clean up when requested.
-            // The reason we recreated GL texture name is for screen shot support.
+            if (mTextureNames != null) {
+                GLES20.glDeleteTextures(1, mTextureNames, 0);
+            }
+			
             mTextureNames = new int[1];
             GLES20.glGenTextures(1, mTextureNames, 0);
             mSurfaceTexture = new SurfaceTexture(mTextureNames[0]);
+			//LOGD("create new SurfaceTexture mSurfaceTexture="+mSurfaceTexture);
         }
+		//LOGD("return mSurfaceTexture="+mSurfaceTexture);
         mVideoLayerUsingSurfaceTexture = videoLayerId;
         return mSurfaceTexture;
     }
@@ -91,12 +107,16 @@ public class HTML5VideoInline extends HTML5VideoView{
     @Override
     public void deleteSurfaceTexture() {
         cleanupSurfaceTexture();
+		mProxy.dispatchReleaseInlineSurface();
         return;
     }
 
     public static void cleanupSurfaceTexture() {
+		if(DebugFlags.WEB_HTML5)
+			LOGD("clearupSurfaceTexture");
         mSurfaceTexture = null;
         mVideoLayerUsingSurfaceTexture = -1;
+			
         return;
     }
 

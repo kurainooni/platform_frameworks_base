@@ -628,7 +628,8 @@ public abstract class HardwareRenderer {
         final ReentrantLock mProfileLock;
         int mProfileCurrentFrame = -PROFILE_FRAME_DATA_COUNT;
         
-        final boolean mDebugDirtyRegions;
+
+        boolean mDebugDirtyRegions;
 
         final int mGlVersion;
         final boolean mTranslucent;
@@ -1185,12 +1186,16 @@ public abstract class HardwareRenderer {
 
                         mFrameCount++;
 
+			            String property;
+			            property = SystemProperties.get(DEBUG_DIRTY_REGIONS_PROPERTY, "false");
+			            mDebugDirtyRegions = "true".equalsIgnoreCase(property);
                         if (mDebugDirtyRegions) {
                             if (mDebugPaint == null) {
                                 mDebugPaint = new Paint();
                                 mDebugPaint.setColor(0x7fff0000);
-                            }
-
+								Log.d(LOG_TAG, "Debugging dirty regions");
+								
+                            }														
                             if (dirty != null && (mFrameCount & 1) == 0) {
                                 canvas.drawRect(dirty, mDebugPaint);
                             }

@@ -54,7 +54,12 @@ public class WebChromeClient {
      */
     public void onReceivedTouchIconUrl(WebView view, String url,
             boolean precomposed) {}
-
+  /**
+  *add by fjz
+  *recevice html5 video url and call by browser 
+  *@hide
+  */
+   public void onReceivedVideoUrl(WebView view ,String url){}
     /**
      * A callback interface used by the host application to notify
      * the current page that its custom view has been dismissed.
@@ -388,4 +393,8 @@ public class WebChromeClient {
      */
     public void setupAutoFill(Message msg) { }
 
+	/** 
+	* @hide
+	*/
+	public void onNewIpadWebView(String url) {}
 }

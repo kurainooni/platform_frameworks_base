@@ -30,6 +30,7 @@ import android.view.SurfaceSession;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
+import android.os.SystemProperties;
 
 class ScreenRotationAnimation {
     static final String TAG = "ScreenRotationAnimation";
@@ -122,6 +123,8 @@ class ScreenRotationAnimation {
     private boolean mMoreStartExit;
     private boolean mMoreStartFrame;
     long mHalfwayPoint;
+
+    static int mHardwareRotation = SystemProperties.getInt("ro.sf.hwrotation",0) / 90;
 
     public void printTo(String prefix, PrintWriter pw) {
         pw.print(prefix); pw.print("mSurface="); pw.print(mSurface);
@@ -277,6 +280,31 @@ class ScreenRotationAnimation {
 
     public static void createRotationMatrix(int rotation, int width, int height,
             Matrix outMatrix) {
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                outMatrix.reset();
+                break;
+            case Surface.ROTATION_90:
+                outMatrix.setRotate(90, 0, 0);
+                outMatrix.postTranslate(height, 0);
+                break;
+            case Surface.ROTATION_180:
+                outMatrix.setRotate(180, 0, 0);
+                outMatrix.postTranslate(width, height);
+                break;
+            case Surface.ROTATION_270:
+                outMatrix.setRotate(270, 0, 0);
+                outMatrix.postTranslate(0, width);
+                break;
+        }
+    }
+
+    public static void createRotationMatrixForRecentPanel(int rotation, int width, int height,
+            Matrix outMatrix) {
+        if (mHardwareRotation % 2 != 0) {
+            rotation = (rotation + (mHardwareRotation == 1 ? 3 : 1)) % 4;
+        }
+
         switch (rotation) {
             case Surface.ROTATION_0:
                 outMatrix.reset();

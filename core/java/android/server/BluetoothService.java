@@ -216,7 +216,7 @@ public class BluetoothService extends IBluetooth.Stub {
 
         initializeNativeDataNative();
 
-        if (isEnabledNative() == 1) {
+        if (isPowerupNative() == 1) {
             Log.w(TAG, "Bluetooth daemons already running - runtime restart? ");
             disableNative();
         }
@@ -241,6 +241,8 @@ public class BluetoothService extends IBluetooth.Stub {
         registerForAirplaneMode(filter);
 
         filter.addAction(Intent.ACTION_DOCK_EVENT);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
         mContext.registerReceiver(mReceiver, filter);
         mBluetoothInputProfileHandler = BluetoothInputProfileHandler.getInstance(mContext, this);
         mBluetoothPanProfileHandler = BluetoothPanProfileHandler.getInstance(mContext, this);
@@ -1729,6 +1731,21 @@ public class BluetoothService extends IBluetooth.Stub {
                     editor.putBoolean(SHARED_PREFERENCE_DOCK_ADDRESS + mDockAddress, true);
                     editor.apply();
                 }
+            } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                if (DBG) {
+                    Log.d(TAG, "ACTION_SCREEN_ON");
+                }
+                if (mContext.getResources().getBoolean
+                    (com.android.internal.R.bool.config_bluetooth_adapter_quick_switch)
+                    && isPowerupNative() == 0) {
+                    Log.w(TAG, "Bluetooth is power down, reset");
+                    disableNative();
+                    mBluetoothState.sendMessage(BluetoothAdapterStateMachine.POWER_STATE_CHANGED, true);
+                }
+            } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                if (DBG) {
+                    Log.d(TAG, "ACTION_SCREEN_OFF");
+                }
             }
         }
     };
@@ -2855,6 +2872,7 @@ public class BluetoothService extends IBluetooth.Stub {
     /*package*/ native String getAdapterPathNative();
 
     private native int isEnabledNative();
+    private native int isPowerupNative();
     /*package*/ native int enableNative();
     /*package*/ native int disableNative();
 

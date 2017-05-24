@@ -763,7 +763,7 @@ public interface WindowManagerPolicy {
      * @param displayRotation The current rotation being applied to the base
      * window.
      */
-    public void beginLayoutLw(int displayWidth, int displayHeight, int displayRotation);
+    public void beginLayoutLw(int displayWidth, int displayHeight, int displayRotation, boolean compat);
 
     /**
      * Return the rectangle of the screen currently covered by system decorations.

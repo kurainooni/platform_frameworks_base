@@ -43,6 +43,7 @@ struct offsets_t {
     jfieldID density;
     jfieldID xdpi;
     jfieldID ydpi;
+    jfieldID hardwareRotation;
 };
 static offsets_t offsets;
 static bool headless = false;
@@ -67,11 +68,14 @@ static void android_view_Display_init(
             return;
         }
     }
+    char hardwareRotation[PROPERTY_VALUE_MAX];
+    property_get("ro.sf.hwrotation", hardwareRotation, "0");
     env->SetIntField(clazz, offsets.pixelFormat,info.pixelFormatInfo.format);
     env->SetFloatField(clazz, offsets.fps,      info.fps);
     env->SetFloatField(clazz, offsets.density,  info.density);
     env->SetFloatField(clazz, offsets.xdpi,     info.xdpi);
     env->SetFloatField(clazz, offsets.ydpi,     info.ydpi);
+    env->SetIntField(clazz, offsets.hardwareRotation, atoi(hardwareRotation));
 }
 
 static jint android_view_Display_getRawWidthNative(
@@ -140,6 +144,7 @@ void nativeClassInit(JNIEnv* env, jclass clazz)
     offsets.density     = env->GetFieldID(clazz, "mDensity", "F");
     offsets.xdpi        = env->GetFieldID(clazz, "mDpiX", "F");
     offsets.ydpi        = env->GetFieldID(clazz, "mDpiY", "F");
+    offsets.hardwareRotation = env->GetFieldID(clazz, "mHardwareRotation", "I");
 }
 
 int register_android_view_Display(JNIEnv* env)

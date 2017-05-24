@@ -335,6 +335,10 @@ void LayerRenderer::destroyLayerDeferred(Layer* layer) {
 }
 
 void LayerRenderer::flushLayer(Layer* layer) {
+/** RK30 mali400 gpu: ignore GL_EXT_discard_framebuffer.
+  * For bug: Launcher screen overlapping without clear.
+  **/
+#ifndef TARGET_GPU_MALI400
 #ifdef GL_EXT_discard_framebuffer
     GLuint fbo = layer->getFbo();
     if (layer && fbo) {
@@ -352,6 +356,8 @@ void LayerRenderer::flushLayer(Layer* layer) {
         }
     }
 #endif
+#endif
+
 }
 
 bool LayerRenderer::copyLayer(Layer* layer, SkBitmap* bitmap) {

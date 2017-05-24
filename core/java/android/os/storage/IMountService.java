@@ -49,6 +49,22 @@ public interface IMountService extends IInterface {
             public String getInterfaceDescriptor() {
                 return DESCRIPTOR;
             }
+			public boolean getUmsRecoverying()  throws RemoteException 
+			{
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try {
+                    _data.writeInterfaceToken(DESCRIPTOR);
+                    mRemote.transact(Stub.TRANSACTION_getUmsRecoverying, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                } finally {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+			}
 
             /**
              * Registers an IMountServiceListener for receiving async
@@ -808,6 +824,8 @@ public interface IMountService extends IInterface {
         static final int TRANSACTION_verifyEncryptionPassword = IBinder.FIRST_CALL_TRANSACTION + 32;
 
         static final int TRANSACTION_fixPermissionsSecureContainer = IBinder.FIRST_CALL_TRANSACTION + 33;
+		
+        static final int TRANSACTION_getUmsRecoverying = IBinder.FIRST_CALL_TRANSACTION + 34;
 
         /**
          * Cast an IBinder object into an IMountService interface, generating a
@@ -1140,6 +1158,14 @@ public interface IMountService extends IInterface {
                     reply.writeInt(result);
                     return true;
                 }
+                case TRANSACTION_getUmsRecoverying: {
+                    data.enforceInterface(DESCRIPTOR);
+                    boolean result = getUmsRecoverying();
+                    reply.writeNoException();
+                    reply.writeInt(result ? 1 : 0);
+                    return true;
+                }
+
                 case TRANSACTION_fixPermissionsSecureContainer: {
                     data.enforceInterface(DESCRIPTOR);
                     String id;
@@ -1333,6 +1359,8 @@ public interface IMountService extends IInterface {
      * @return a numerical value. See {@code ENCRYPTION_STATE_*} for possible values.
      */
     public int getEncryptionState() throws RemoteException;
+
+	public boolean getUmsRecoverying() throws RemoteException;
 
     /**
      * Decrypts any encrypted volumes.

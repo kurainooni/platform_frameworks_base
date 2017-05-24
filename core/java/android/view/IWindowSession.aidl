@@ -123,6 +123,10 @@ interface IWindowSession {
     void finishDrawing(IWindow window);
     
     void setInTouchMode(boolean showFocus);
+	
+    void hideWindowLayer(IWindow window, boolean visible);
+
+    void updatePositionAndSize(IWindow window,int x,int y,int widht,int height);
     boolean getInTouchMode();
     
     boolean performHapticFeedback(IWindow window, int effectId, boolean always);
@@ -172,4 +176,10 @@ interface IWindowSession {
             int z, in Bundle extras, boolean sync);
     
     void wallpaperCommandComplete(IBinder window, in Bundle result);
+
+        /**
+* rk add
+* the same to setTransparentRegion, except the region is in screen coordinate.
+*/
+   void setInvisiableRegionScreen(IWindow window, in Region region);
 }

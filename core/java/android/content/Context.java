@@ -1786,6 +1786,9 @@ public abstract class Context {
      */
     public static final String NSD_SERVICE = "servicediscovery";
 
+//$_rbox_$_modify_$_chenzhi_20120309: for ethernet service
+    public static final String ETHERNET_SERVICE = "ethernet";
+
     /**
      * Use with {@link #getSystemService} to retrieve a
      * {@link android.media.AudioManager} for handling management of volume,

@@ -57,7 +57,13 @@ import android.os.SystemProperties;
 import android.os.UEventObserver;
 import android.os.Vibrator;
 import android.provider.Settings;
-
+//gyq
+import android.app.Activity;
+import android.view.inputmethod.InputMethodManager;
+import android.app.ActivityManager.RunningTaskInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Binder;
+//
 import com.android.internal.R;
 import com.android.internal.policy.PolicyManager;
 import com.android.internal.statusbar.IStatusBarService;
@@ -265,6 +271,27 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 KeyEvent.KEYCODE_MUSIC, Intent.CATEGORY_APP_MUSIC);
         sApplicationLaunchKeyCategories.append(
                 KeyEvent.KEYCODE_CALCULATOR, Intent.CATEGORY_APP_CALCULATOR);
+//gyq
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_SETTINGSSS, Intent.CATEGORY_APP_SETTINGSSS);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_EMAIL, Intent.CATEGORY_APP_EMAIL);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_WIFISETTING, Intent.CATEGORY_APP_WIFISETTING);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_ETHERNETSETTING, Intent.CATEGORY_APP_ETHERNETSETTING);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_APKINSTALLER, Intent.CATEGORY_APP_APKINSTALLER);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_RKVIDEOPLAYER, Intent.CATEGORY_APP_RKVIDEOPLAYER);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_GALLERY, Intent.CATEGORY_APP_GALLERY);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_SOUNDRECODER, Intent.CATEGORY_APP_SOUNDRECODER);
+        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_AIRISSUPPORT, Intent.CATEGORY_APP_AIRISSUPPORT);
+/*        sApplicationLaunchKeyCategories.append(
+                KeyEvent.KEYCODE_SCREENSHOT, Intent.CATEGORY_APP_SCREENSHOT);*/
     }
 
     /**
@@ -1038,7 +1065,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             mHasSystemNavBar = true;
             mNavigationBarCanMove = false;
         }
-
+        if (SystemProperties.get("ro.build.characteristics","none").equals("tablet")){
+	    mHasSystemNavBar = true;
+            mNavigationBarCanMove = false;
+	}
         if (!mHasSystemNavBar) {
             mHasNavigationBar = mContext.getResources().getBoolean(
                     com.android.internal.R.bool.config_showNavigationBar);
@@ -1204,7 +1234,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
-    private int readRotation(int resID) {
+    private int readRotation(int resID) {//gyq
         try {
             int rotation = mContext.getResources().getInteger(resID);
             switch (rotation) {
@@ -1720,13 +1750,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     /** {@inheritDoc} */
     @Override
     public long interceptKeyBeforeDispatching(WindowState win, KeyEvent event, int policyFlags) {
-        final boolean keyguardOn = keyguardOn();
-        final int keyCode = event.getKeyCode();
+//            Log.d(TAG, "nnnnnnnnnnnnnnnnnnnnnnnnnnnnfirst");//gyq
+        final boolean keyguardOn = keyguardOn();         
         final int repeatCount = event.getRepeatCount();
         final int metaState = event.getMetaState();
         final int flags = event.getFlags();
         final boolean down = event.getAction() == KeyEvent.ACTION_DOWN;
         final boolean canceled = event.isCanceled();
+        final int keyCode = event.getKeyCode();
+//        Log.d(TAG, "nnnnnnnnnnnnnnnnnnnnnnnnnnnnkeyCode="+keyCode);//gyq
 
         if (DEBUG_INPUT) {
             Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
@@ -1757,7 +1789,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // First we always handle the home key here, so applications
         // can never break it, although if keyguard is on, we do let
         // it handle it, because that gives us the correct 5 second
-        // timeout.
+        // timeout.        
         if (keyCode == KeyEvent.KEYCODE_HOME) {
 
             // If we have released the home key, and didn't do anything else
@@ -1910,6 +1942,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
             }
             return -1;
+        } 
+//gyq
+				else if (keyCode == KeyEvent.KEYCODE_SCREENSHOT) {
+        		takeScreenshot();
         }
 
         // Shortcuts are invoked through Search+key, so intercept those here
@@ -2033,7 +2069,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     + ", repeatCount=" + event.getRepeatCount()
                     + ", policyFlags=" + policyFlags);
         }
-
+                
         KeyEvent fallbackEvent = null;
         if ((event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0) {
             final KeyCharacterMap kcm = event.getKeyCharacterMap();
@@ -2309,7 +2345,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     /** {@inheritDoc} */
-    public void beginLayoutLw(int displayWidth, int displayHeight, int displayRotation) {
+    public void beginLayoutLw(int displayWidth, int displayHeight, int displayRotation, boolean compat) {
         mUnrestrictedScreenLeft = mUnrestrictedScreenTop = 0;
         mUnrestrictedScreenWidth = displayWidth;
         mUnrestrictedScreenHeight = displayHeight;
@@ -2361,7 +2397,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // then take that into account.
         navVisible |= !mCanHideNavigationBar;
 
-        if (mNavigationBar != null) {
+        if (mNavigationBar != null && ((mLastSystemUiFlags & View.SYSTEM_UI_FLAG_SHOW_FULLSCREEN) == 0)) {
             // Force the navigation bar to its appropriate place and
             // size.  We need to do this directly, instead of relying on
             // it to bubble up from the nav bar, because this needs to
@@ -2377,7 +2413,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         && ((float) mExternalDisplayWidth / mExternalDisplayHeight > 1)
                         == ((float) displayWidth / displayHeight > 1);
                     if (sameAspect && top > mExternalDisplayHeight) {
-                        top = mExternalDisplayHeight;
+						Log.d(TAG,"-----------do not move tha nav bar up---------,mExternalDisplayHeight= "+mExternalDisplayHeight);
+                        //top = mExternalDisplayHeight;
                     }
                 }
                 mTmpNavigationFrame.set(0, top, displayWidth, displayHeight);
@@ -2819,7 +2856,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 + String.format(" flags=0x%08x", fl)
                 + " pf=" + pf.toShortString() + " df=" + df.toShortString()
                 + " cf=" + cf.toShortString() + " vf=" + vf.toShortString());
-        
+
         win.computeFrameLw(pf, df, cf, vf);
         
         // Dock windows carve out the bottom of the screen, so normal windows
@@ -3202,9 +3239,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     /** {@inheritDoc} */
     @Override
     public int interceptKeyBeforeQueueing(KeyEvent event, int policyFlags, boolean isScreenOn) {
+//        Log.d(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxfirst");//gyq
         final boolean down = event.getAction() == KeyEvent.ACTION_DOWN;
         final boolean canceled = event.isCanceled();
         final int keyCode = event.getKeyCode();
+//        Log.d(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxkeyCode="+keyCode);//gyq
 
         final boolean isInjected = (policyFlags & WindowManagerPolicy.FLAG_INJECTED) != 0;
 

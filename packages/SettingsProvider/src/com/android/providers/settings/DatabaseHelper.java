@@ -1437,8 +1437,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     ("1".equals(SystemProperties.get("ro.kernel.qemu")) ||
                         mContext.getResources().getBoolean(R.bool.def_stay_on_while_plugged_in))
                      ? 1 : 0);
-            loadIntegerSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
-                    R.integer.def_screen_off_timeout);
+           // loadIntegerSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
+           //         R.integer.def_screen_off_timeout);
+	    //add by wbx for factory as ro.rk.screenoff_time
+	    loadSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
+                     SystemProperties.getInt("ro.rk.screenoff_time", mContext.getResources().getInteger(R.integer.def_screen_off_timeout)));
 
             // Set default cdma emergency tone
             loadSetting(stmt, Settings.System.EMERGENCY_TONE, 0);
@@ -1457,7 +1460,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             loadBooleanSetting(stmt, Settings.System.AIRPLANE_MODE_ON,
                     R.bool.def_airplane_mode_on);
-
+            
+            loadBooleanSetting(stmt, Settings.System.SCREENSHOT_BUTTON_SHOW,
+                    R.bool.def_screenshot_button_show);
+            loadStringSetting(stmt,Settings.System.SCREENSHOT_LOCATION,
+                    R.string.def_screenshot_location); 
+            
             loadStringSetting(stmt, Settings.System.AIRPLANE_MODE_RADIOS,
                     R.string.def_airplane_mode_radios);
 
@@ -1470,8 +1478,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             loadBooleanSetting(stmt, Settings.System.AUTO_TIME_ZONE,
                     R.bool.def_auto_time_zone); // Sync timezone to NITZ
 
-            loadIntegerSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
-                    R.integer.def_screen_brightness);
+//            loadIntegerSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
+//                    R.integer.def_screen_brightness);
+	    //add by wbx for factory as ro.rk.def_brightness
+
+            loadIntegerSetting(stmt, Settings.System.HDMI_LCD_TIMEOUT,
+                    R.integer.def_hdmi_lcd_timeout);   
+
+	    loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
+	    	    SystemProperties.getInt("ro.rk.def_brightness", mContext.getResources().getInteger(R.integer.def_screen_brightness)));
 
             loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
                     R.bool.def_screen_brightness_automatic_mode);
@@ -1557,9 +1572,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             SystemProperties.get("ro.com.android.dataroaming",
                                     "false")) ? 1 : 0);
 
-            loadBooleanSetting(stmt, Settings.Secure.INSTALL_NON_MARKET_APPS,
-                    R.bool.def_install_non_market_apps);
-
+					  loadBooleanSetting(stmt, Settings.Secure.INSTALL_NON_MARKET_APPS,
+					                   R.bool.def_install_non_market_apps);//gyq
+	   //add by wbx for factory
+	    loadSetting(stmt, Settings.Secure.INSTALL_NON_MARKET_APPS,
+			"true".equalsIgnoreCase(	
+			    SystemProperties.get("ro.rk.install_non_market_apps",
+                          	    "false")) ? 1 : 0);
             loadStringSetting(stmt, Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
                     R.string.def_location_providers_allowed);
 

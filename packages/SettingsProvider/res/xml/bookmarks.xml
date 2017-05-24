@@ -56,4 +56,38 @@
     <bookmark
         category="android.intent.category.APP_MESSAGING"
         shortcut="s" />
+
+    <bookmark
+        category="android.intent.category.APP_SETTINGSSS"
+        shortcut="t" />
+    <bookmark
+        category="android.intent.category.APP_EMAIL"
+        shortcut="i" />
+    <bookmark
+        category="android.intent.category.APP_WIFISETTING"
+        shortcut="f" />
+    <bookmark
+        category="android.intent.category.APP_ETHERNETSETTING"
+        shortcut="g" />
+    <bookmark
+        category="android.intent.category.APP_APKINSTALLER"
+        shortcut="h" />
+    <bookmark
+        category="android.intent.category.APP_RKVIDEOPLAYER"
+        shortcut="q" />
+    <bookmark
+        category="android.intent.category.APP_GALLERY"
+        shortcut="j" />
+    <bookmark
+        category="android.intent.category.APP_SCREENSHOT"
+        shortcut="k" />
+    <bookmark
+        category="android.intent.category.APP_SOUNDRECODER"
+        shortcut="o" />
+    <bookmark
+        category="android.intent.category.APP_AIRISSUPPORT"
+        shortcut="d" />
+    <bookmark
+        category="android.intent.category.APP_CALLSOFTKEYBOARD"
+        shortcut="n" />
 </bookmarks>

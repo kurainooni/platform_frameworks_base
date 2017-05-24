@@ -17,7 +17,85 @@
 ** limitations under the License.
 */
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<!--nand flash-->	
+    <string name="nandflash_ext_media_checking_notification_title" >Preparing nandflash</string>
+    <string name="nandflash_ext_media_nofs_notification_message" >Nandflash blank or has unsupported filesystem.</string>
+    <string name="nandflash_ext_media_unmountable_notification_title" >Damaged nandflash</string>
+    <string name="nandflash_ext_media_unmountable_notification_message" >Nandflash damaged. You may have to reformat it.</string>
+    <string name="nandflash_ext_media_badremoval_notification_title" >Nandflash unexpectedly removed</string>
+    <string name="nandflash_ext_media_badremoval_notification_message" >Unmount nandflash before removing to avoid data loss.</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_title" >Nandflash safe to remove</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_message" >You can safely remove nandflash.</string>
+    <string name="nandflash_ext_media_nomedia_notification_title" >Removed nandflash</string>
+    <string name="nandflash_ext_media_nomedia_notification_message" >Nandflash removed. Insert a new one.</string>
+    <string name="nandflash_progress_unmounting" >Unmounting nandflash...</string>
+    <string name="nandflash_progress_erasing" >Erasing nandflash...</string>
+    <string name="nandflash_format_error" >Couldn\'t erase nandflash.</string>
+    <string name="nandflash_media_bad_removal">Nandflash was removed before being unmounted.</string>
+    <string name="nandflash_media_checking" >Nandflash is currently being checked.</string>
+    <string name="nandflash_media_removed">Nandflash has been removed.</string>
+    <string name="nandflash_media_shared" >Nandflash is currently in use by a computer.</string>
+    <string name="nandflash_ext_media_nofs_notification_title">Blank Nandflash</string>
+<!--sdcard-->	
+    <string name="sdcard_ext_media_checking_notification_title" >Preparing SD card</string>
+    <string name="sdcard_ext_media_nofs_notification_message" >SD card blank or has unsupported filesystem.</string>
+    <string name="sdcard_ext_media_unmountable_notification_title" >Damaged SD card</string>
+    <string name="sdcard_ext_media_unmountable_notification_message" >SD card damaged. You may have to reformat it.</string>
+    <string name="sdcard_ext_media_badremoval_notification_title" >SD card unexpectedly removed</string>
+    <string name="sdcard_ext_media_badremoval_notification_message" >Unmount SD card before removing to avoid data loss.</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_title" >SD card safe to remove</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_message" >You can safely remove SD card.</string>
+    <string name="sdcard_ext_media_nomedia_notification_title" >Removed SD card</string>
+    <string name="sdcard_ext_media_nomedia_notification_message" >SD card removed. Insert a new one.</string>
+    <string name="sdcard_progress_unmounting" >Unmounting SD card...</string>
+    <string name="sdcard_progress_erasing" >Erasing SD card...</string>
+    <string name="sdcard_format_error" >Couldn\'t erase SD card.</string>
+    <string name="sdcard_media_bad_removal">SD card was removed before being unmounted.</string>
+    <string name="sdcard_media_checking" >SD card is currently being checked.</string>
+    <string name="sdcard_media_removed">SD card has been removed.</string>
+    <string name="sdcard_media_shared" >SD card is currently in use by a computer.</string>
+    <string name="sdcard_ext_media_nofs_notification_title">Blank SD card</string>
+<!--usb-->	
+    <string name="usb_ext_media_checking_notification_title" >Preparing USB storage</string>
+    <string name="usb_ext_media_nofs_notification_message" >USB storage blank or has unsupported filesystem.</string>
+    <string name="usb_ext_media_unmountable_notification_title" >Damaged USB storage</string>
+    <string name="usb_ext_media_unmountable_notification_message" >USB storage damaged. You may have to reformat it.</string>
+    <string name="usb_ext_media_badremoval_notification_title" >USB storage unexpectedly removed</string>
+    <string name="usb_ext_media_badremoval_notification_message" >Unmount USB storage before removing to avoid data loss.</string>
+    <string name="usb_ext_media_safe_unmount_notification_title" >USB storage safe to remove</string>
+    <string name="usb_ext_media_safe_unmount_notification_message" >You can safely remove USB storage.</string>
+    <string name="usb_ext_media_nomedia_notification_title" >Removed USB storage</string>
+    <string name="usb_ext_media_nomedia_notification_message" >USB storage removed. Insert a new one.</string>
+    <string name="usb_progress_unmounting" >Unmounting USB storage...</string>
+    <string name="usb_progress_erasing" >Erasing USB storage...</string>
+    <string name="usb_format_error" >Couldn\'t erase USB storage.</string>
+    <string name="usb_media_bad_removal">USB storage was removed before being unmounted.</string>
+    <string name="usb_media_checking" >USB storage is currently being checked.</string>
+    <string name="usb_media_removed">USB storage has been removed.</string>
+    <string name="usb_media_shared" >USB storage is currently in use by a computer.</string>
+    <string name="usb_ext_media_nofs_notification_title">Blank USB storage</string>
+<!--mb0 usb-->
+    <string name="mb0_ext_media_checking_notification_title" >Preparing SD card in keyboard base</string>
+    <string name="mb0_ext_media_nofs_notification_message" >SD card in keyboard base blank or has unsupported filesystem.</string>
+    <string name="mb0_ext_media_unmountable_notification_title" >Damaged SD card in keyboard base</string>
+    <string name="mb0_ext_media_unmountable_notification_message" >SD card in keyboard base damaged. You may have to reformat it.</string>
+    <string name="mb0_ext_media_badremoval_notification_title" >SD card in keyboard base unexpectedly removed</string>
+    <string name="mb0_ext_media_badremoval_notification_message" >Unmount SD card in keyboard base before removing to avoid data loss.</string>
+    <string name="mb0_ext_media_safe_unmount_notification_title" >SD card in keyboard base safe to remove</string>
+    <string name="mb0_ext_media_safe_unmount_notification_message" >You can safely remove SD card in keyboard base.</string>
+    <string name="mb0_ext_media_nomedia_notification_title" >Removed SD card in keyboard base</string>
+    <string name="mb0_ext_media_nomedia_notification_message" >SD card in keyboard base removed. Insert a new one.</string>
+    <string name="mb0_progress_unmounting" >Unmounting SD card in keyboard base...</string>
+    <string name="mb0_progress_erasing" >Erasing SD card in keyboard base...</string>
+    <string name="mb0_format_error" >Couldn\'t erase SD card in keyboard base.</string>
+    <string name="mb0_media_bad_removal">SD card in keyboard base was removed before being unmounted.</string>
+    <string name="mb0_media_checking" >SD card in keyboard base is currently being checked.</string>
+    <string name="mb0_media_removed">SD card in keyboard base has been removed.</string>
+    <string name="mb0_media_shared" >SD card in keyboard base is currently in use by a computer.</string>
+    <string name="mb0_ext_media_nofs_notification_title">Blank SD card in keyboard base</string>
+
     <!-- Suffix added to a number to signify size in bytes. -->
     <string name="byteShort">B</string>
     <!-- Suffix added to a number to signify size in kilobytes. -->
@@ -3071,9 +3149,9 @@
 
     <!-- External media notification strings -->
     <!-- Shown when external media is being checked [CHAR LIMIT=30] -->
-    <string name="ext_media_checking_notification_title" product="nosdcard">Preparing USB storage</string>
+<!--    <string name="ext_media_checking_notification_title" product="nosdcard">Preparing USB storage</string>-->
     <!-- Shown when external media is being checked -->
-    <string name="ext_media_checking_notification_title" product="default">Preparing SD card</string>
+    <!--<string name="ext_media_checking_notification_title" product="default">Preparing SD card</string>-->
     <string name="ext_media_checking_notification_message">Checking for errors.</string>
 
     <!-- Shown when external media is blank (or unsupported filesystem) [CHAR LIMIT=30] -->

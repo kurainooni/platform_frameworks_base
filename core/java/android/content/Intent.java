@@ -2565,7 +2565,26 @@ public class Intent implements Parcelable, Cloneable {
      */
     @SdkConstant(SdkConstantType.INTENT_CATEGORY)
     public static final String CATEGORY_APP_MUSIC = "android.intent.category.APP_MUSIC";
-
+//gyq
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_SETTINGSSS = "android.intent.category.APP_SETTINGSSS";
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_WIFISETTING = "android.intent.category.APP_WIFISETTING";
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_ETHERNETSETTING = "android.intent.category.APP_ETHERNETSETTING";
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_APKINSTALLER = "android.intent.category.APP_APKINSTALLER";
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_RKVIDEOPLAYER = "android.intent.category.APP_RKVIDEOPLAYER";
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_SCREENSHOT = "android.intent.category.APP_SCREENSHOT";    
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_SOUNDRECODER = "android.intent.category.APP_SOUNDRECODER";  
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_AIRISSUPPORT = "android.intent.category.APP_AIRISSUPPORT";  
+    @SdkConstant(SdkConstantType.INTENT_CATEGORY)
+    public static final String CATEGORY_APP_CALLSOFTKEYBOARD = "android.intent.category.APP_CALLSOFTKEYBOARD";  
+    
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
     // Standard extra data keys.

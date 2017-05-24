@@ -27,8 +27,12 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.storage.StorageEventListener;
 import android.os.storage.StorageManager;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Slog;
+
+
+import android.os.storage.StorageVolume;
 
 public class StorageNotification extends StorageEventListener {
     private static final String TAG = "StorageNotification";
@@ -87,6 +91,7 @@ public class StorageNotification extends StorageEventListener {
         mAsyncEventHandler.post(new Runnable() {
             @Override
             public void run() {
+		Slog.d(TAG,"----------------------------USB MASS STORAGE CONNECT "+connected);
                 onUsbMassStorageConnectionChangedAsync(connected);
             }
         });
@@ -126,6 +131,10 @@ public class StorageNotification extends StorageEventListener {
     }
 
     private void onStorageStateChangedAsync(String path, String oldState, String newState) {
+        boolean usbConnected = "true".equals(SystemProperties.get("sys.ums.connected", "false"));
+        Slog.d(TAG, "onStorageStateChangedAsync while usb connection state is " + usbConnected);
+        if (mUmsAvailable != usbConnected)
+            mUmsAvailable = usbConnected;
         Slog.i(TAG, String.format(
                 "Media {%s} state changed from {%s} -> {%s}", path, oldState, newState));
         if (newState.equals(Environment.MEDIA_SHARED)) {
@@ -133,22 +142,54 @@ public class StorageNotification extends StorageEventListener {
              * Storage is now shared. Modify the UMS notification
              * for stopping UMS.
              */
-            Intent intent = new Intent();
-            intent.setClass(mContext, com.android.systemui.usb.UsbStorageActivity.class);
-            PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
-            setUsbStorageNotification(
-                    com.android.internal.R.string.usb_storage_stop_notification_title,
-                    com.android.internal.R.string.usb_storage_stop_notification_message,
-                    com.android.internal.R.drawable.stat_sys_warning, false, true, pi);
+            if (usbConnected) {
+                Intent intent = new Intent();
+                intent.setClass(mContext, com.android.systemui.usb.UsbStorageActivity.class);
+                PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
+                setUsbStorageNotification(
+                        com.android.internal.R.string.usb_storage_stop_notification_title,
+                        com.android.internal.R.string.usb_storage_stop_notification_message,
+                        com.android.internal.R.drawable.stat_sys_warning, false, true, pi);
+            }
         } else if (newState.equals(Environment.MEDIA_CHECKING)) {
             /*
              * Storage is now checking. Update media notification and disable
              * UMS notification.
              */
+          if (path.equals("/mnt/sdcard")) {//GYQ
+            
+            setMediaStorageNotification(
+                    com.android.internal.R.string.nandflash_ext_media_checking_notification_title,
+                    com.android.internal.R.string.ext_media_checking_notification_message,
+                    com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);
+          } else if (path.equals("/mnt/external_sd")) {
+            setMediaStorageNotification(
+                    com.android.internal.R.string.sdcard_ext_media_checking_notification_title,
+                    com.android.internal.R.string.ext_media_checking_notification_message,
+                    com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);
+        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+            setMediaStorageNotification(
+                    com.android.internal.R.string.usb_ext_media_checking_notification_title,
+                    com.android.internal.R.string.ext_media_checking_notification_message,
+                    com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);
+        	} else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+            setMediaStorageNotification(
+                    com.android.internal.R.string.mb0_ext_media_checking_notification_title,
+                    com.android.internal.R.string.ext_media_checking_notification_message,
+                    com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);
+        	} else {
             setMediaStorageNotification(
                     com.android.internal.R.string.ext_media_checking_notification_title,
                     com.android.internal.R.string.ext_media_checking_notification_message,
                     com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);
+          }
+/*            setMediaStorageNotification(
+                    com.android.internal.R.string.ext_media_checking_notification_title,
+                    com.android.internal.R.string.ext_media_checking_notification_message,
+                    com.android.internal.R.drawable.stat_notify_sdcard_prepare, true, false, null);*/
             updateUsbMassStorageNotification(false);
         } else if (newState.equals(Environment.MEDIA_MOUNTED)) {
             /*
@@ -177,10 +218,42 @@ public class StorageNotification extends StorageEventListener {
                      * notification if connected.
                      */
                     if (Environment.isExternalStorageRemovable()) {
-                        setMediaStorageNotification(
+                    	
+						          if (path.equals("/mnt/sdcard")) {//GYQ
+												setMediaStorageNotification(
+                                com.android.internal.R.string.nandflash_ext_media_safe_unmount_notification_title,
+                                com.android.internal.R.string.nandflash_ext_media_safe_unmount_notification_message,
+                                com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);
+						          } else if (path.equals("/mnt/external_sd")) {
+												setMediaStorageNotification(
+                                com.android.internal.R.string.sdcard_ext_media_safe_unmount_notification_title,
+                                com.android.internal.R.string.sdcard_ext_media_safe_unmount_notification_message,
+                                com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+												setMediaStorageNotification(
+                                com.android.internal.R.string.usb_ext_media_safe_unmount_notification_title,
+                                com.android.internal.R.string.usb_ext_media_safe_unmount_notification_message,
+                                com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);
+						        	}  else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+												setMediaStorageNotification(
+                                com.android.internal.R.string.mb0_ext_media_safe_unmount_notification_title,
+                                com.android.internal.R.string.mb0_ext_media_safe_unmount_notification_message,
+                                com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);
+        	}else {
+												setMediaStorageNotification(
                                 com.android.internal.R.string.ext_media_safe_unmount_notification_title,
                                 com.android.internal.R.string.ext_media_safe_unmount_notification_message,
                                 com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);
+						          }
+                    	
+/*
+                        setMediaStorageNotification(
+                                com.android.internal.R.string.ext_media_safe_unmount_notification_title,
+                                com.android.internal.R.string.ext_media_safe_unmount_notification_message,
+                                com.android.internal.R.drawable.stat_notify_sdcard, true, true, null);*/
                     } else {
                         // This device does not have removable storage, so
                         // don't tell the user they can remove it.
@@ -205,10 +278,41 @@ public class StorageNotification extends StorageEventListener {
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
+						          if (path.equals("/mnt/sdcard")) {//GYQ
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.nandflash_ext_media_nofs_notification_title,
+						                    com.android.internal.R.string.nandflash_ext_media_nofs_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+						          } else if (path.equals("/mnt/external_sd")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.sdcard_ext_media_nofs_notification_title,
+						                    com.android.internal.R.string.sdcard_ext_media_nofs_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.usb_ext_media_nofs_notification_title,
+						                    com.android.internal.R.string.usb_ext_media_nofs_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.mb0_ext_media_nofs_notification_title,
+						                    com.android.internal.R.string.mb0_ext_media_nofs_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+        	}else {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.ext_media_nofs_notification_title,
+						                    com.android.internal.R.string.ext_media_nofs_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+						          }
+						          
+/*        
             setMediaStorageNotification(
                     com.android.internal.R.string.ext_media_nofs_notification_title,
                     com.android.internal.R.string.ext_media_nofs_notification_message,
-                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);
+                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi);*/
             updateUsbMassStorageNotification(mUmsAvailable);
         } else if (newState.equals(Environment.MEDIA_UNMOUNTABLE)) {
             /*
@@ -217,35 +321,140 @@ public class StorageNotification extends StorageEventListener {
              */
             Intent intent = new Intent();
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
+            intent.putExtra("path",path);
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
+
+						          if (path.equals("/mnt/sdcard")) {//GYQ
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.nandflash_ext_media_unmountable_notification_title,
+						                    com.android.internal.R.string.nandflash_ext_media_unmountable_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+						          } else if (path.equals("/mnt/external_sd")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.sdcard_ext_media_unmountable_notification_title,
+						                    com.android.internal.R.string.sdcard_ext_media_unmountable_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.usb_ext_media_unmountable_notification_title,
+						                    com.android.internal.R.string.usb_ext_media_unmountable_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.mb0_ext_media_unmountable_notification_title,
+						                    com.android.internal.R.string.mb0_ext_media_unmountable_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+        	}else {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.ext_media_unmountable_notification_title,
+						                    com.android.internal.R.string.ext_media_unmountable_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+						          }
+/*						          
             setMediaStorageNotification(
                     com.android.internal.R.string.ext_media_unmountable_notification_title,
                     com.android.internal.R.string.ext_media_unmountable_notification_message,
-                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); 
+                    com.android.internal.R.drawable.stat_notify_sdcard_usb, true, false, pi); */
             updateUsbMassStorageNotification(mUmsAvailable);
         } else if (newState.equals(Environment.MEDIA_REMOVED)) {
             /*
              * Storage has been removed. Show nomedia media notification,
              * and disable UMS notification regardless of connection state.
              */
+             
+						          if (path.equals("/mnt/sdcard")) {//GYQ
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.nandflash_ext_media_nomedia_notification_title,
+						                    com.android.internal.R.string.nandflash_ext_media_nomedia_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb,
+						                    true, false, null);
+						          } else if (path.equals("/mnt/external_sd")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.sdcard_ext_media_nomedia_notification_title,
+						                    com.android.internal.R.string.sdcard_ext_media_nomedia_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb,
+						                    true, false, null);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.usb_ext_media_nomedia_notification_title,
+						                    com.android.internal.R.string.usb_ext_media_nomedia_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb,
+						                    true, false, null);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.mb0_ext_media_nomedia_notification_title,
+						                    com.android.internal.R.string.mb0_ext_media_nomedia_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb,
+						                    true, false, null);
+        	}else {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.ext_media_nomedia_notification_title,
+						                    com.android.internal.R.string.ext_media_nomedia_notification_message,
+						                    com.android.internal.R.drawable.stat_notify_sdcard_usb,
+						                    true, false, null);
+						          }
+/*						                       
             setMediaStorageNotification(
                     com.android.internal.R.string.ext_media_nomedia_notification_title,
                     com.android.internal.R.string.ext_media_nomedia_notification_message,
                     com.android.internal.R.drawable.stat_notify_sdcard_usb,
-                    true, false, null);
-            updateUsbMassStorageNotification(false);
+                    true, false, null);*/
+            updateUsbMassStorageNotification(mUmsAvailable);
         } else if (newState.equals(Environment.MEDIA_BAD_REMOVAL)) {
             /*
              * Storage has been removed unsafely. Show bad removal media notification,
              * and disable UMS notification regardless of connection state.
              */
+
+             					if (path.equals("/mnt/sdcard")) {//GYQ
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.nandflash_ext_media_badremoval_notification_title,
+						                    com.android.internal.R.string.nandflash_ext_media_badremoval_notification_message,
+						                    com.android.internal.R.drawable.stat_sys_warning,
+						                    true, true, null);
+						          } else if (path.equals("/mnt/external_sd")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.sdcard_ext_media_badremoval_notification_title,
+						                    com.android.internal.R.string.sdcard_ext_media_badremoval_notification_message,
+						                    com.android.internal.R.drawable.stat_sys_warning,
+						                    true, true, null);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB1") ||
+        	path.equals("/mnt/usb_storage/usb/USB2") ||
+        	path.equals("/mnt/usb_storage/usb/USB3") ||
+        	path.equals("/mnt/usb_storage")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.usb_ext_media_badremoval_notification_title,
+						                    com.android.internal.R.string.usb_ext_media_badremoval_notification_message,
+						                    com.android.internal.R.drawable.stat_sys_warning,
+						                    true, true, null);
+						        	} else if (path.equals("/mnt/usb_storage/usb/USB4")) {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.mb0_ext_media_badremoval_notification_title,
+						                    com.android.internal.R.string.mb0_ext_media_badremoval_notification_message,
+						                    com.android.internal.R.drawable.stat_sys_warning,
+						                    true, true, null);
+        	}else {
+						            setMediaStorageNotification(
+						                    com.android.internal.R.string.ext_media_badremoval_notification_title,
+						                    com.android.internal.R.string.ext_media_badremoval_notification_message,
+						                    com.android.internal.R.drawable.stat_sys_warning,
+						                    true, true, null);
+						          }
+
+/*
             setMediaStorageNotification(
                     com.android.internal.R.string.ext_media_badremoval_notification_title,
                     com.android.internal.R.string.ext_media_badremoval_notification_message,
                     com.android.internal.R.drawable.stat_sys_warning,
-                    true, true, null);
-            updateUsbMassStorageNotification(false);
+                    true, true, null);*/
+            updateUsbMassStorageNotification(mUmsAvailable);
         } else {
             Slog.w(TAG, String.format("Ignoring unknown state {%s}", newState));
         }
@@ -320,7 +529,10 @@ public class StorageNotification extends StorageEventListener {
                 Settings.Secure.ADB_ENABLED,
                 0);
 
-            if (POP_UMS_ACTIVITY_ON_CONNECT && !adbOn) {
+            boolean usbConnected = "true".equals(SystemProperties.get("sys.ums.connected", "false"));
+            Slog.d(TAG, "setUsbStorageNotification while usb connection state is " + usbConnected);
+
+            if (POP_UMS_ACTIVITY_ON_CONNECT && !adbOn && usbConnected) {
                 // Pop up a full-screen alert to coach the user through enabling UMS. The average
                 // user has attached the device to USB either to charge the phone (in which case
                 // this is harmless) or transfer files, and in the latter case this alert saves

@@ -46,7 +46,10 @@ import android.view.ViewRootImpl;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import android.os.Environment;
+import java.io.File;
 
+import java.io.FileInputStream;
 /**
  * Provides access to the system wallpaper. With WallpaperManager, you can
  * get the current wallpaper, get the desired dimensions for the wallpaper, set
@@ -294,9 +297,25 @@ public class WallpaperManager {
         }
         
         private Bitmap getDefaultWallpaperLocked(Context context) {
+	     InputStream is = null;
+//	     final String storagePath = Environment.getExternalStorageDirectory().getPath();
+             final File defaultfactoryConfigFile = new File("system/media/rkfactory");
+	     
+	    if(!defaultfactoryConfigFile.exists()){
+	         defaultfactoryConfigFile.mkdirs();	
+	     }
+             final File defaultWorkspaceConfigFile = new File("system/media/rkfactory/default_wallpaper.jpg");
             try {
-                InputStream is = context.getResources().openRawResource(
+		Log.d(TAG,"LOAD DEFAULT WALLPAPER  ......"+defaultWorkspaceConfigFile.exists());
+		if (defaultWorkspaceConfigFile.exists()) {
+        //        is = context.getAssets().open("system/media/wallpaper.PNG");
+                is = new FileInputStream( defaultWorkspaceConfigFile );
+              }else{
+                 is = context.getResources().openRawResource(
                         com.android.internal.R.drawable.default_wallpaper);
+                }
+               // InputStream is = context.getResources().openRawResource(
+                 //       com.android.internal.R.drawable.default_wallpaper);
                 if (is != null) {
                     int width = mService.getWidthHint();
                     int height = mService.getHeightHint();
@@ -315,7 +334,11 @@ public class WallpaperManager {
                         }
                     }
                 }
-            } catch (RemoteException e) {
+            } catch (IOException e) {
+	     e.printStackTrace();
+	    }
+	   catch (RemoteException e) {
+
                 // Ignore
             }
             return null;

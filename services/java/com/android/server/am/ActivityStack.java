@@ -56,6 +56,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.UserId;
+import android.os.SystemProperties;
 import android.util.EventLog;
 import android.util.Log;
 import android.util.Slog;
@@ -250,6 +251,15 @@ final class ActivityStack {
      * can be warned they may not be in the activity they think they are.
      */
     ActivityRecord mLastStartedActivity = null;
+
+
+    /**
+     *
+     */
+    DevicePerformanceTool mDevicePerformanceTool;
+
+    boolean mHardwareUsePerformanceTool = false;
+    boolean mSystemAppFreqLimited = false;
     
     /**
      * Set when we know we are going to be calling updateConfiguration()
@@ -415,6 +425,19 @@ final class ActivityStack {
         mGoingToSleep = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ActivityManager-Sleep");
         mLaunchingActivity = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ActivityManager-Launch");
         mLaunchingActivity.setReferenceCounted(false);
+
+        String value = SystemProperties.get("ro.hardware","rk30board");
+        if (value.equals("rk30board")
+                || value.equals("rk2928board")
+                || value.equals("rk29board")) {
+            mHardwareUsePerformanceTool = true;
+            mDevicePerformanceTool = new DevicePerformanceTool();
+        }
+
+        value = SystemProperties.get("ro.board.platform","rk30xx");
+        if (value.equals("rk30xx")) {
+            mSystemAppFreqLimited = true;
+        }
     }
     
     final ActivityRecord topRunningActivityLocked(ActivityRecord notTop) {
@@ -1436,6 +1459,9 @@ final class ActivityStack {
         next.updateOptionsLocked(options);
 
         if (DEBUG_SWITCH) Slog.v(TAG, "Resuming " + next);
+
+        checkCompatibility();
+        checkApplicationHardwareAccMode();
 
         // If we are currently pausing an activity, then don't do anything
         // until that is done.
@@ -4543,6 +4569,8 @@ final class ActivityStack {
         
         r.startFreezingScreenLocked(r.app, 0);
         
+        checkCompatibility();
+
         try {
             if (DEBUG_SWITCH || DEBUG_STATES) Slog.i(TAG,
                     (andResume ? "Relaunching to RESUMED " : "Relaunching to PAUSED ")
@@ -4574,5 +4602,20 @@ final class ActivityStack {
     
     public void dismissKeyguardOnNextActivityLocked() {
         mDismissKeyguardOnNextActivity = true;
+    }
+
+    private void checkCompatibility() {
+        if (mService.getFrontActivityScreenCompatMode() == ActivityManager.COMPAT_MODE_STANDAR_SCREEN) {
+            mService.mWindowManager.setCompatibilityModeState(true, false);
+        } else {
+            mService.mWindowManager.setCompatibilityModeState(false, false);
+        }
+    }
+
+    private void checkApplicationHardwareAccMode() {
+        if (mHardwareUsePerformanceTool) {
+            int mode = mService.getFrontActivityHardwareAccModeLocked(mSystemAppFreqLimited);
+            mDevicePerformanceTool.setPerformanceMode(mode);
+        }
     }
 }

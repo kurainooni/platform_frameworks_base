@@ -16,6 +16,9 @@
 
 #ifndef ANDROID_HWUI_EXTENSIONS_H
 #define ANDROID_HWUI_EXTENSIONS_H
+#define ANDROID_HWUI_VERSION "1.002"
+#define ANDROID_HWUI_VERSION_NAME "sys.ghwui.version"
+#include <cutils/properties.h>
 
 #include <utils/SortedVector.h>
 #include <utils/String8.h>
@@ -33,7 +36,7 @@ namespace uirenderer {
 ///////////////////////////////////////////////////////////////////////////////
 
 // Debug
-#if DEBUG_EXTENSIONS
+#if DEBUG_EXTENSIONS 
     #define EXT_LOGD(...) ALOGD(__VA_ARGS__)
 #else
     #define EXT_LOGD(...)
@@ -49,6 +52,10 @@ namespace uirenderer {
 class Extensions {
 public:
     Extensions() {
+        // set hwui version code.
+        if (property_get(ANDROID_HWUI_VERSION_NAME, new char[92], 0) <= 0)
+          property_set(ANDROID_HWUI_VERSION_NAME,ANDROID_HWUI_VERSION);
+
         const char* buffer = (const char*) glGetString(GL_EXTENSIONS);
         const char* current = buffer;
         const char* head = current;

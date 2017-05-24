@@ -26,6 +26,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Region;
+import android.graphics.Region.Op;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -94,6 +95,9 @@ public class SurfaceView extends View {
 
     final WindowManager.LayoutParams mLayout
             = new WindowManager.LayoutParams();
+    //>>>>>>>>>>add by rk
+   boolean isWebViewPlugin = false;
+   //<<<<<<<<<<<<
     IWindowSession mSession;
     MyWindow mWindow;
     final Rect mVisibleInsets = new Rect();
@@ -207,7 +211,9 @@ public class SurfaceView extends View {
         mParent.requestTransparentRegion(this);
         mSession = getWindowSession();
         mLayout.token = getWindowToken();
-        mLayout.setTitle("SurfaceView");
+        if(mLayout.getTitle() == null || mLayout.getTitle().toString().trim().equals("")){
+            mLayout.setTitle("SurfaceView");
+        }
         mViewVisibility = getVisibility() == VISIBLE;
 
         if (!mGlobalListenersAdded) {
@@ -216,6 +222,10 @@ public class SurfaceView extends View {
             observer.addOnPreDrawListener(mDrawListener);
             mGlobalListenersAdded = true;
         }
+    }
+
+    public void setTitle(String mName){
+        mLayout.setTitle(mName);
     }
 
     @Override
@@ -390,6 +400,70 @@ public class SurfaceView extends View {
         mWindowType = type;
     }
 
+   //>>>>>>>>>>>>add by rk
+    private Region mCurTransRegion = null;
+    //private Region mPreTransRegion = null;
+    private void applyTransparentRegionInScreen()
+    {
+           try{
+		  if (mWindow!=null && mCurTransRegion!=null) {        
+			mSession.setInvisiableRegionScreen(mWindow,mCurTransRegion);
+		 }
+           }catch(android.os.RemoteException e){
+                   Log.i(TAG, "" + e);
+           }
+    }    
+   // private boolean afterLayout = false;
+       /**
+        * rk add, call after it has been layouted
+        * @hide
+        */
+       public void changeTransparentRegionInScreen(Region region){
+            setTransparentRegionInScreen(region);
+	    //updateWindow(true, true);
+       }
+
+       public void forceUpdateWindow()
+       	{
+             updateWindow(true, true);
+	}
+               
+       private boolean isFullScreen = false;
+       /**
+        * rk add
+        * @hide
+        */
+       public void setTransparentRegionInScreen(Region region){
+               if(isFullScreen || region == null || region.isEmpty()){
+                       if(mCurTransRegion != null){
+                               mCurTransRegion.setEmpty();
+                       }
+                       return;
+               }
+               if(mCurTransRegion == null){
+                       mCurTransRegion = new Region(region);
+               }else{
+                       mCurTransRegion.set(region);
+               }
+       }
+       /**
+        * rk add
+       * this is ugly so
+        * @hide
+        */
+       public void setAsWebViewPlugin(){
+               mLayout.treatTransparentAsInvisiable = 1;
+               isWebViewPlugin = true; 
+      }
+
+      public void setAsWebViewFullScreenPlugin(boolean isFS){
+       		isFullScreen = isFS;
+	       if(mCurTransRegion != null){
+	             mCurTransRegion.setEmpty();
+	         }
+      }
+
+  //<<<<<<<<<<<<<<<<<<
     private void updateWindow(boolean force, boolean redrawNeeded) {
         if (!mHaveFrame) {
             return;
@@ -487,6 +561,12 @@ public class SurfaceView extends View {
                         mReportDrawNeeded = true;
                     }
 
+		 //>>>>>>>>>>>>>>>>add by qiuen
+                if(mCurTransRegion != null){
+                           applyTransparentRegionInScreen();
+                      }
+		   //<<<<<<<<<<<<<<<<<<
+
                     if (DEBUG) Log.i(TAG, "New surface: " + mNewSurface
                             + ", vis=" + visible + ", frame=" + mWinFrame);
 
@@ -567,6 +647,8 @@ public class SurfaceView extends View {
                             }
                         }
                     }
+
+			
                 } finally {
                     mIsCreating = false;
                     if (redrawNeeded) {
@@ -596,7 +678,46 @@ public class SurfaceView extends View {
     void handleGetNewSurface() {
         updateWindow(false, false);
     }
+/**
+* add by fjz
+*@hide
+*/
+public void updatePositionAndSize(int x,int y,int width,int height){
+	if (mSession != null && mWindow != null) {
+		
+		try {
+			mSurfaceLock.lock();
+			mSession.updatePositionAndSize(mWindow,x,y,width,height);
+			mSurfaceLock.unlock();
+		} catch (RemoteException ex) {
+		}
+	}
 
+}
+/**
+* add by fjz
+*@hide
+*/
+public void updateLayoutParams(int resId){
+   mLayout.windowAnimations = resId;
+}
+/**
+*add by fjz
+*@hide
+*/
+        public void hideSurfaceView(boolean hide)
+        {
+                Log.d(TAG,"hideSurfaceView hide="+hide);
+                if (mSession != null && mWindow != null) {
+
+                        try {
+                                mSurfaceLock.lock();
+                                mSession.hideWindowLayer(mWindow,hide);
+                                mSurfaceLock.unlock();
+                        } catch (RemoteException ex) {
+                        }
+                }
+        }
     /**
      * Check to see if the surface has fixed size dimensions or if the surface's
      * dimensions are dimensions are dependent on its current layout.

@@ -62,15 +62,17 @@ public class ToggleSlider extends RelativeLayout
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ToggleSlider,
                 defStyle, 0);
 
-        mToggle = (CompoundButton)findViewById(R.id.toggle);
-        mToggle.setOnCheckedChangeListener(this);
-        mToggle.setBackgroundDrawable(res.getDrawable(R.drawable.status_bar_toggle_button));
+//        mToggle = (CompoundButton)findViewById(R.id.toggle);
+//gyq--for the auto brightness--temporary !!!!!        
+//        mToggle.setOnCheckedChangeListener(this);
+
+//        mToggle.setBackgroundDrawable(res.getDrawable(R.drawable.status_bar_toggle_button));
 
         mSlider = (SeekBar)findViewById(R.id.slider);
         mSlider.setOnSeekBarChangeListener(this);
 
-        mLabel = (TextView)findViewById(R.id.label);
-        mLabel.setText(a.getString(R.styleable.ToggleSlider_text));
+//        mLabel = (TextView)findViewById(R.id.label);
+//        mLabel.setText(a.getString(R.styleable.ToggleSlider_text));
 
         a.recycle();
     }
@@ -100,22 +102,25 @@ public class ToggleSlider extends RelativeLayout
 
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (mListener != null) {
-            mListener.onChanged(this, mTracking, mToggle.isChecked(), progress);
+//            mListener.onChanged(this, mTracking, mToggle.isChecked(), progress);
+            mListener.onChanged(this, mTracking, false, progress);
         }
     }
 
     public void onStartTrackingTouch(SeekBar seekBar) {
         mTracking = true;
         if (mListener != null) {
-            mListener.onChanged(this, mTracking, mToggle.isChecked(), mSlider.getProgress());
+//            mListener.onChanged(this, mTracking, mToggle.isChecked(), mSlider.getProgress());
+            mListener.onChanged(this, mTracking, false, mSlider.getProgress());
         }
-        mToggle.setChecked(false);
+//        mToggle.setChecked(false);
     }
 
     public void onStopTrackingTouch(SeekBar seekBar) {
         mTracking = false;
         if (mListener != null) {
-            mListener.onChanged(this, mTracking, mToggle.isChecked(), mSlider.getProgress());
+//            mListener.onChanged(this, mTracking, mToggle.isChecked(), mSlider.getProgress());
+            mListener.onChanged(this, mTracking, false, mSlider.getProgress());
         }
     }
 
@@ -124,11 +129,12 @@ public class ToggleSlider extends RelativeLayout
     }
 
     public void setChecked(boolean checked) {
-        mToggle.setChecked(checked);
+//        mToggle.setChecked(checked);
     }
 
     public boolean isChecked() {
-        return mToggle.isChecked();
+//        return mToggle.isChecked();
+return false;
     }
 
     public void setMax(int max) {

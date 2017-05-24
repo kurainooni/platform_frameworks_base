@@ -20,6 +20,65 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<!--nand flash-->
+    <string name="nandflash_ext_media_checking_notification_title" >Preparando memória FLASH</string>
+    <string name="nandflash_ext_media_nofs_notification_message" >Memória FLASH está vazia ou contém arquivos de sistema não suportados.</string>
+    <string name="nandflash_ext_media_unmountable_notification_title" >Memória FLASH corrompida</string>
+    <string name="nandflash_ext_media_unmountable_notification_message" >Memória FLASH corrompida. É necessário formatá-la.</string>
+    <string name="nandflash_ext_media_badremoval_notification_title" >Memória FLASH removida inexperadamente</string>
+    <string name="nandflash_ext_media_badremoval_notification_message" >Desmonte a memória FLASH antes de removê-la, para evitar perda de dados.</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_title" >Memória FLASH já pode ser removida com segurança</string>
+    <string name="nandflash_ext_media_safe_unmount_notification_message" >Você já pode remover a memória FLASH.</string>
+    <string name="nandflash_ext_media_nomedia_notification_title" >Memória FLASH removida</string>
+    <string name="nandflash_ext_media_nomedia_notification_message" >Memória FLASH removida. Insira uma nova.</string>
+    <string name="nandflash_progress_unmounting" >Desmontando memória FLASH...</string>
+    <string name="nandflash_progress_erasing" >Formatando memória FLASH...</string>
+    <string name="nandflash_format_error" >Não foi possível formatar a memória FLASH.</string>
+    <string name="nandflash_media_bad_removal">Memória foi removida antes de ser desmontada.</string>
+    <string name="nandflash_media_checking" >Memória FLASH está sendo verificada.</string>
+    <string name="nandflash_media_removed">Memória FLASH foi removida.</string>
+    <string name="nandflash_media_shared" >Memória FLASH está sendo utilizada por um computador.</string>
+    <string name="nandflash_ext_media_nofs_notification_title">Memória FLASH está vazia</string>
+<!--sdcard-->
+    <string name="sdcard_ext_media_checking_notification_title" >Preparando cartão SD</string>
+    <string name="sdcard_ext_media_nofs_notification_message" >Cartão SD está vazio ou contém arquivos de sistema não suportados.</string>
+    <string name="sdcard_ext_media_unmountable_notification_title" >Cartão SD está corrompido</string>
+    <string name="sdcard_ext_media_unmountable_notification_message" >Cartão SD corrompido. É necessário formatá-lo.</string>
+    <string name="sdcard_ext_media_badremoval_notification_title" >Cartão SD foi removido inexperadamente</string>
+    <string name="sdcard_ext_media_badremoval_notification_message" >Desmonte o cartão SD antes de removê-lo, para evitar perda de dados.</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_title" >Cartão SD já pode ser removido</string>
+    <string name="sdcard_ext_media_safe_unmount_notification_message" >Você já pode remover o cartão SD.</string>
+    <string name="sdcard_ext_media_nomedia_notification_title" >Cartão SD removido</string>
+    <string name="sdcard_ext_media_nomedia_notification_message" >Cartão SD removido. Insira um novo.</string>
+    <string name="sdcard_progress_unmounting" >Desmontando o cartão SD...</string>
+    <string name="sdcard_progress_erasing" >Formatando o cartão SD...</string>
+    <string name="sdcard_format_error" >Não foi possível formatar o cartão SD.</string>
+    <string name="sdcard_media_bad_removal">O cartão SD foi removido antes de ser desmontado.</string>
+    <string name="sdcard_media_checking" >Cartão SD está sendo verificado.</string>
+    <string name="sdcard_media_removed">Cartão SD foi removido.</string>
+    <string name="sdcard_media_shared" >O cartão SD está sendo utilizado por um computador.</string>
+    <string name="sdcard_ext_media_nofs_notification_title">Cartão SD vazio</string>
+<!--usb-->
+    <string name="usb_ext_media_checking_notification_title" >Preparando armazenamento USB</string>
+    <string name="usb_ext_media_nofs_notification_message" >Armazenamento USB está vazio ou contém arquivos de sistema não suprtados.</string>
+    <string name="usb_ext_media_unmountable_notification_title" >Armazenamento USB corrompido</string>
+    <string name="usb_ext_media_unmountable_notification_message" >Armazenamento USB corrompido. É necessário formatá-lo.</string>
+    <string name="usb_ext_media_badremoval_notification_title" >Armazenamento USB foi removido inexperadamente</string>
+    <string name="usb_ext_media_badremoval_notification_message" >Desmonte o armazenamento USB antes de removê-lo, para evitar perda de dados.</string>
+    <string name="usb_ext_media_safe_unmount_notification_title" >Armazenamento USB já pode ser removido</string>
+    <string name="usb_ext_media_safe_unmount_notification_message" >Você já pode remover o armazenamento USB.</string>
+    <string name="usb_ext_media_nomedia_notification_title" >Armazenamento USB removido</string>
+    <string name="usb_ext_media_nomedia_notification_message" >Armazenamento USB removido. Insira um novo.</string>
+    <string name="usb_progress_unmounting" >Desmontando armazenamento USB...</string>
+    <string name="usb_progress_erasing" >Formatando armazenamento USB...</string>
+    <string name="usb_format_error" >Não foi possível formatar o armazenamento USB.</string>
+    <string name="usb_media_bad_removal">Armazenamento USB foi removido antes de ser desmontado.</string>
+    <string name="usb_media_checking" >Armazenamento USB está sendo verificado.</string>
+    <string name="usb_media_removed">Armazenamento USB foi removido.</string>
+    <string name="usb_media_shared" >Armazenamento USB está sendo utilizado um por computador.</string>
+    <string name="usb_ext_media_nofs_notification_title">Armazenamento USB vazio</string>
+
+    
     <string name="byteShort" msgid="8340973892742019101">"B"</string>
     <string name="kilobyteShort" msgid="5973789783504771878">"Kb"</string>
     <string name="megabyteShort" msgid="6355851576770428922">"MB"</string>

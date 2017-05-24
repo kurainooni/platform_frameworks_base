@@ -29,6 +29,7 @@ import android.view.InputChannel;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.WindowManager.LayoutParams;
+import android.util.Log;
 
 /**
  * Implementation of {@link IWindowSession} so that mSession is not null in
@@ -61,8 +62,14 @@ public final class BridgeWindowSession implements IWindowSession {
         // pass for now.
         return false;
     }
-
-    @Override
+	@Override
+    public void hideWindowLayer(IWindow window, boolean visible) throws RemoteException {
+	// pass for now.
+    }
+	@Override
+   public void updatePositionAndSize(IWindow window,int x,int y,int widht,int height) throws RemoteException{
+	//pass for now.
+   }
     public boolean performHapticFeedback(IWindow window, int effectId, boolean always) {
         // pass for now.
         return false;
@@ -103,6 +110,10 @@ public final class BridgeWindowSession implements IWindowSession {
     @Override
     public void setTransparentRegion(IWindow arg0, Region arg1) throws RemoteException {
         // pass for now.
+    }
+
+     public void setInvisiableRegionScreen(IWindow arg0, Region arg1) throws RemoteException {
+     // pass for now. rk add
     }
 
     @Override

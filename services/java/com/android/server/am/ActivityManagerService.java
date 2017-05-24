@@ -2216,6 +2216,26 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
         }
     }
+
+    public int getFrontActivityHardwareAccModeLocked(boolean systemAppLimited) {
+        int mode = PackageManager.HARDWARE_ACC_MODE_UNKNOWN;
+        ActivityRecord r = mMainStack.topRunningActivityLocked(null);
+
+        if (r != null) {
+            try {
+                mode = AppGlobals.getPackageManager().getPackageHardwareAccMode(r.realActivity.toString());
+            } catch (RemoteException e) {
+            }
+        }
+
+        if (systemAppLimited && mode == PackageManager.HARDWARE_ACC_MODE_UNKNOWN &&
+                ((r.info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)) {
+            return PackageManager.HARDWARE_ACC_MODE_NORMAL;
+        }
+
+        mode &= ~PackageManager.HARDWARE_ACC_FLAG_ASSIGNED;
+        return mode;
+    }
     
     CompatibilityInfo compatibilityInfoForPackageLocked(ApplicationInfo ai) {
         return mCompatModePackages.compatibilityInfoForPackageLocked(ai);

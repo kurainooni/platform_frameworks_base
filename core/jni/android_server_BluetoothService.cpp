@@ -523,6 +523,14 @@ static jint isEnabledNative(JNIEnv *env, jobject object) {
     return -1;
 }
 
+static jint isPowerupNative(JNIEnv *env, jobject object) {
+#ifdef HAVE_BLUETOOTH
+    ALOGV("%s", __FUNCTION__);
+    return bt_is_powerup();
+#endif
+    return -1;
+}
+
 static jboolean setPairingConfirmationNative(JNIEnv *env, jobject object,
                                              jstring address, bool confirm,
                                              int nativeData) {
@@ -1700,6 +1708,7 @@ static JNINativeMethod sMethods[] = {
     {"getAdapterPathNative", "()Ljava/lang/String;", (void*)getAdapterPathNative},
 
     {"isEnabledNative", "()I", (void *)isEnabledNative},
+    {"isPowerupNative", "()I", (void *)isPowerupNative},
     {"enableNative", "()I", (void *)enableNative},
     {"disableNative", "()I", (void *)disableNative},
 

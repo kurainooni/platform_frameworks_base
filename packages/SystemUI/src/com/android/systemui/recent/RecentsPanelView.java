@@ -52,7 +52,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
-import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.PopupMenu;
@@ -67,7 +67,7 @@ import com.android.systemui.statusbar.tablet.TabletStatusBar;
 
 import java.util.ArrayList;
 
-public class RecentsPanelView extends FrameLayout implements OnItemClickListener, RecentsCallback,
+public class RecentsPanelView extends RelativeLayout implements OnItemClickListener, RecentsCallback,
         StatusBarPanel, Animator.AnimatorListener, View.OnTouchListener {
     static final String TAG = "RecentsPanelView";
     static final boolean DEBUG = TabletStatusBar.DEBUG || PhoneStatusBar.DEBUG || false;
@@ -735,8 +735,8 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
                     ServiceManager.getService(Context.WINDOW_SERVICE));
             try {
                 if (!wm.hasSystemNavBar()) {
-                    FrameLayout.LayoutParams lp =
-                            (FrameLayout.LayoutParams) mTransitionBg.getLayoutParams();
+                    RelativeLayout.LayoutParams lp =
+                            (RelativeLayout.LayoutParams) mTransitionBg.getLayoutParams();
                     int statusBarHeight = getResources().
                             getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
                     lp.setMargins(0, statusBarHeight, 0, 0);

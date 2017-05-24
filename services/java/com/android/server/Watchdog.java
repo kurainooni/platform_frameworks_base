@@ -468,7 +468,7 @@ public class Watchdog extends Thread {
             } catch (InterruptedException ignored) {}
 
             // Only kill the process if the debugger is not attached.
-            if (!Debug.isDebuggerConnected()) {
+            if (false){//!Debug.isDebuggerConnected()) {
                 Slog.w(TAG, "*** WATCHDOG KILLING SYSTEM PROCESS: " + name);
                 Process.killProcess(Process.myPid());
                 System.exit(10);

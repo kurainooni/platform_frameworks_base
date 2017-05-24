@@ -57,7 +57,8 @@ public class ExternalStorageFormatter extends Service
             Log.i(TAG, "Received storage state changed notification that " +
                     path + " changed state from " + oldState +
                     " to " + newState);
-            updateProgressState();
+//            updateProgressState();
+            updateProgressState(false);
         }
     };
 
@@ -94,7 +95,8 @@ public class ExternalStorageFormatter extends Service
             if (!mAlwaysReset) {
                 mProgressDialog.setOnCancelListener(this);
             }
-            updateProgressState();
+//            updateProgressState();
+            updateProgressState(true);
             mProgressDialog.show();
         }
 
@@ -140,12 +142,15 @@ public class ExternalStorageFormatter extends Service
         stopSelf();
     }
 
-    void updateProgressState() {
+//    void updateProgressState() {
+    void updateProgressState(boolean isExcute) {
         String status = mStorageVolume == null ?
                 Environment.getExternalStorageState() :
                 mStorageManager.getVolumeState(mStorageVolume.getPath());
+         Log.w(TAG,  mStorageVolume.getPath()+"Failed talking with mount service----------------------------"+ status);
         if (Environment.MEDIA_MOUNTED.equals(status)
                 || Environment.MEDIA_MOUNTED_READ_ONLY.equals(status)) {
+            if(!isExcute) return;//patch
             updateProgressDialog(R.string.progress_unmounting);
             IMountService mountService = getMountService();
             final String extStoragePath = mStorageVolume == null ?

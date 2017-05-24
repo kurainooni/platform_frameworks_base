@@ -244,6 +244,19 @@ static const KeycodeLabel KEYCODES[] = {
     { "RO", 217 },
     { "KANA", 218 },
     { "ASSIST", 219 },
+//gyq
+		{ "SETTINGSSS", 221 },
+		{ "EMAIL", 222 },
+		{ "WIFISETTING", 223 },
+		{ "ETHERNETSETTING", 224 },
+		{ "APKINSTALLER", 225 },
+		{ "RKVIDEOPLAYER", 226 },
+		{ "GALLERY", 227 },
+		{ "SCREENSHOT", 228 },
+		{ "SOUNDRECODER", 229 },
+		{ "AIRISSUPPORT", 230 },
+		{ "CALLSOFTKEYBOARD", 231 },
+		{ "USERKEY01", 232 },
 
     // NOTE: If you add a new keycode here you must also add it to several other files.
     //       Refer to frameworks/base/core/java/android/view/KeyEvent.java for the full list.

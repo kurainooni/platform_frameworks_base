@@ -57,6 +57,12 @@ import java.util.Set;
 public final class WebViewCore {
 
     private static final String LOGTAG = "webcore";
+	private static final boolean DEBUG = true;
+	private void LOGD(String msg){
+		if(DEBUG){
+			Log.d(LOGTAG,msg);
+		}
+	}
 
     static {
         // Load libwebcore and libchromium_net during static initialization.
@@ -1136,7 +1142,7 @@ public final class WebViewCore {
         // Test harness messages
         static final int REQUEST_EXT_REPRESENTATION = 160;
         static final int REQUEST_DOC_AS_TEXT = 161;
-
+		static final int PAUSE_FLASH = 162;
         // debugging
         static final int DUMP_DOMTREE = 170;
         static final int DUMP_RENDERTREE = 171;
@@ -1525,7 +1531,10 @@ public final class WebViewCore {
                         case REQUEST_DOC_AS_TEXT:
                             mBrowserFrame.documentAsText((Message) msg.obj);
                             break;
-
+						case PAUSE_FLASH:
+							LOGD("pause_Flash");
+							nativePauseFlash(mNativeClass);
+							break;
                         case SET_MOVE_MOUSE:
                             nativeMoveMouse(mNativeClass, msg.arg1, msg.arg2);
                             break;
@@ -2085,6 +2094,8 @@ public final class WebViewCore {
 
     // notify webkit that our virtual view size changed size (after inv-zoom)
     private void viewSizeChanged(WebViewClassic.ViewSizeData data) {
+    
+        Log.d(LOGTAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>viewSizeChanged");
         int w = data.mWidth;
         int h = data.mHeight;
         int textwrapWidth = data.mTextWrapWidth;
@@ -2978,7 +2989,9 @@ public final class WebViewCore {
 
         if(pluginView instanceof SurfaceView)
             ((SurfaceView)pluginView).setZOrderOnTop(true);
-
+        //>>>>>>>>>>>>>>>>add by rk
+	((SurfaceView)pluginView).setAsWebViewPlugin();
+	//<<<<<<
         ViewManager.ChildView view = mWebViewClassic.mViewManager.createView();
         view.mView = pluginView;
         return view;
@@ -3088,9 +3101,18 @@ public final class WebViewCore {
     static void setShouldMonitorWebCoreThread() {
         sShouldMonitorWebCoreThread = true;
     }
+	
+	public void newWebView(String url) {
+		if(mWebViewClassic.getSettings().isPopupVideoEnable()){
+				Message.obtain(mWebViewClassic.mPrivateHandler,
+						 WebViewClassic.LOADIPADURL,
+						 url).sendToTarget();
+			}
+	}
 
     private native void nativeSetIsPaused(int nativeClass, boolean isPaused);
     private native void nativePause(int nativeClass);
+	 private native void nativePauseFlash(int nativeClass);
     private native void nativeResume(int nativeClass);
     private native void nativeFreeMemory(int nativeClass);
     private native void nativeFullScreenPluginHidden(int nativeClass, int npp);

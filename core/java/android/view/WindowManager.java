@@ -457,6 +457,10 @@ public interface WindowManager extends ViewManager {
          */
         @Deprecated
         public int memoryType;
+
+	//>>>>>>>>>>>add by qiuen
+	 public int treatTransparentAsInvisiable = 0;
+	//<<<<<<<<<<<<<
         
         /** Window flag: as long as this window is visible to the user, allow
          *  the lock screen to activate while the screen is on. 
@@ -1207,6 +1211,7 @@ public interface WindowManager extends ViewManager {
             out.writeInt(x);
             out.writeInt(y);
             out.writeInt(type);
+	    out.writeInt(treatTransparentAsInvisiable);//add by qiuen
             out.writeInt(flags);
             out.writeInt(privateFlags);
             out.writeInt(softInputMode);
@@ -1247,6 +1252,7 @@ public interface WindowManager extends ViewManager {
             x = in.readInt();
             y = in.readInt();
             type = in.readInt();
+	    treatTransparentAsInvisiable = in.readInt(); //add by qiuen
             flags = in.readInt();
             privateFlags = in.readInt();
             softInputMode = in.readInt();
@@ -1290,6 +1296,9 @@ public interface WindowManager extends ViewManager {
         public static final int SYSTEM_UI_LISTENER_CHANGED = 1<<14;
         /** {@hide} */
         public static final int INPUT_FEATURES_CHANGED = 1<<15;
+
+	public static final int PRIVATE_TREATTRANSPARENTASINVISIABLE_CHANGED = 1<<17;//add by qiuen
+		
         /** {@hide} */
         public static final int PRIVATE_FLAGS_CHANGED = 1<<16;
         /** {@hide} */
@@ -1337,6 +1346,14 @@ public interface WindowManager extends ViewManager {
                 type = o.type;
                 changes |= TYPE_CHANGED;
             }
+	    //>>>>>add by qiuen
+            if (treatTransparentAsInvisiable != o.treatTransparentAsInvisiable){
+                        treatTransparentAsInvisiable = o.treatTransparentAsInvisiable;
+                        changes |= PRIVATE_TREATTRANSPARENTASINVISIABLE_CHANGED;
+           }
+
+	   //<<<<<<<<<<
+			
             if (flags != o.flags) {
                 flags = o.flags;
                 changes |= FLAGS_CHANGED;
@@ -1459,7 +1476,11 @@ public interface WindowManager extends ViewManager {
             }
             sb.append(" ty=");
             sb.append(type);
-            sb.append(" fl=#");
+	    //>>>>>>add by qiuen
+	   sb.append(" treatTransparentAsInvisiable=");
+	   sb.append(treatTransparentAsInvisiable);
+           //<<<<<<<<
+	   sb.append(" fl=#");
             sb.append(Integer.toHexString(flags));
             if (privateFlags != 0) {
                 sb.append(" pfl=0x").append(Integer.toHexString(privateFlags));

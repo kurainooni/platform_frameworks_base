@@ -1198,6 +1198,18 @@ public final class Settings {
          * Whether Airplane Mode is on.
          */
         public static final String AIRPLANE_MODE_ON = "airplane_mode_on";
+        
+        /**
+         *Screenshot store location
+	 * @hide
+         */
+        public static final String SCREENSHOT_LOCATION="screenshot_location";
+        
+        /**
+         *scrrenshot button wether display
+	 * @hide
+         */
+        public static final String SCREENSHOT_BUTTON_SHOW="screenshot_button_show"; 
 
         /**
          * Constant for use in AIRPLANE_MODE_RADIOS to specify Bluetooth radio.
@@ -1313,6 +1325,47 @@ public final class Settings {
          */
         public static final String WIFI_STATIC_DNS2 = "wifi_static_dns2";
 
+        /**
+         * Whether to use static IP and other static network attributes.
+         * @hide
+         * Set to 1 for true and 0 for false.
+         */
+        public static final String ETHERNET_USE_STATIC_IP = "ethernet_use_static_ip";
+
+        /**
+         * The static IP address.
+         * @hide
+         * Example: "192.168.1.51"
+         */
+        public static final String ETHERNET_STATIC_IP = "ethernet_static_ip";
+
+        /**
+         * If using static IP, the gateway's IP address.
+         * @hide
+         * Example: "192.168.1.1"
+         */
+        public static final String ETHERNET_STATIC_GATEWAY = "ethernet_static_gateway";
+
+        /**
+         * If using static IP, the net mask.
+         * @hide
+         * Example: "255.255.255.0"
+         */
+        public static final String ETHERNET_STATIC_NETMASK = "ethernet_static_netmask";
+
+        /**
+         * If using static IP, the primary DNS's IP address.
+         * @hide
+         * Example: "192.168.1.1"
+         */
+        public static final String ETHERNET_STATIC_DNS1 = "ethernet_static_dns1";
+
+        /**
+         * If using static IP, the secondary DNS's IP address.
+         * @hide
+         * Example: "192.168.1.2"
+         */
+        public static final String ETHERNET_STATIC_DNS2 = "ethernet_static_dns2";
 
         /**
          * Determines whether remote devices may discover and/or connect to
@@ -1401,6 +1454,14 @@ public final class Settings {
          * The screen backlight brightness between 0 and 255.
          */
         public static final String SCREEN_BRIGHTNESS = "screen_brightness";
+        
+
+        /**
+         * The hdmi lcd timeout seconds.
+	 *@hide
+         */
+        public static final String HDMI_LCD_TIMEOUT = "hdmi_lcd_timeout";
+
 
         /**
          * Control whether to enable automatic brightness mode.
@@ -2610,6 +2671,12 @@ public final class Settings {
          * 0=disabled. 1=enabled.
          */
         public static final String BLUETOOTH_ON = "bluetooth_on";
+
+        /**
+         *
+         * @hide
+         */
+        public static final String ETHERNET_ON = "ethernet_on";
 
         /**
          * Get the key that retrieves a bluetooth headset's priority.

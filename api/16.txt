@@ -5779,6 +5779,16 @@ package android.content {
     field public static final java.lang.String CATEGORY_TAB = "android.intent.category.TAB";
     field public static final java.lang.String CATEGORY_TEST = "android.intent.category.TEST";
     field public static final java.lang.String CATEGORY_UNIT_TEST = "android.intent.category.UNIT_TEST";
+    
+    field public static final java.lang.String CATEGORY_APP_SETTINGSSS = "android.intent.category.APP_SETTINGSSS";
+    field public static final java.lang.String CATEGORY_APP_EMAIL = "android.intent.category.APP_EMAIL";    
+    field public static final java.lang.String CATEGORY_APP_WIFISETTING = "android.intent.category.APP_WIFISETTING";
+    field public static final java.lang.String CATEGORY_APP_ETHERNETSETTING = "android.intent.category.APP_ETHERNETSETTING";
+    field public static final java.lang.String CATEGORY_APP_APKINSTALLER = "android.intent.category.APP_APKINSTALLER";
+    field public static final java.lang.String CATEGORY_APP_RKVIDEOPLAYER = "android.intent.category.APP_RKVIDEOPLAYER";    
+    field public static final java.lang.String CATEGORY_APP_GALLERY = "android.intent.category.APP_GALLERY";
+    field public static final java.lang.String CATEGORY_APP_SCREENSHOT = "android.intent.category.APP_SCREENSHOT";    
+    
     field public static final android.os.Parcelable.Creator CREATOR;
     field public static final java.lang.String EXTRA_ALARM_COUNT = "android.intent.extra.ALARM_COUNT";
     field public static final deprecated java.lang.String EXTRA_ALLOW_REPLACE = "android.intent.extra.ALLOW_REPLACE";

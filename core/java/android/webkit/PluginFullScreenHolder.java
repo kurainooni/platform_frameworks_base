@@ -77,6 +77,11 @@ class PluginFullScreenHolder {
     }
 
     public void show() {
+       //>>>>>add by rk
+	if (mContentView instanceof SurfaceView) {
+	((SurfaceView)mContentView).setAsWebViewFullScreenPlugin(true);//rk add
+       }
+	//<<<<<<
         // Other plugins may attempt to draw so hide them while we're active.
         if (mWebView.getViewManager() != null)
             mWebView.getViewManager().hideAll();
@@ -86,6 +91,12 @@ class PluginFullScreenHolder {
     }
 
     public void hide() {
+        //>>>>>add by rk
+	if (mContentView instanceof SurfaceView) {
+	((SurfaceView)mContentView).setAsWebViewFullScreenPlugin(false);//rk add
+        }
+	//<<<<<<
+		
         WebChromeClient client = mWebView.getWebChromeClient();
         client.onHideCustomView();
     }

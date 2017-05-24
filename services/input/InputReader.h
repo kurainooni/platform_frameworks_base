@@ -1268,7 +1268,7 @@ protected:
     virtual void dumpCalibration(String8& dump);
     virtual bool hasStylus() const = 0;
 
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds) = 0;
+    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds,int32_t width,int32_t height,char scale) = 0;
 
 private:
     // The surface orientation and width and height set by configureSurface().
@@ -1613,7 +1613,7 @@ public:
     virtual void process(const RawEvent* rawEvent);
 
 protected:
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds);
+    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds,int32_t width,int32_t height,char scale);
     virtual void configureRawPointerAxes();
     virtual bool hasStylus() const;
 
@@ -1631,7 +1631,7 @@ public:
     virtual void process(const RawEvent* rawEvent);
 
 protected:
-    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds);
+    virtual void syncTouch(nsecs_t when, bool* outHavePointerIds,int32_t width,int32_t height,char scale);
     virtual void configureRawPointerAxes();
     virtual bool hasStylus() const;
 

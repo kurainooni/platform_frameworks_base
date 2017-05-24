@@ -106,7 +106,7 @@ import java.util.List;
  */
 public class ConnectivityService extends IConnectivityManager.Stub {
 
-    private static final boolean DBG = true;
+    private static final boolean DBG = false;
     private static final boolean VDBG = false;
     private static final String TAG = "ConnectivityService";
 
@@ -1868,10 +1868,10 @@ private NetworkStateTracker makeWimaxStateTracker() {
         // kill the one not preferred
         if (mNetConfigs[type].isDefault()) {
             if (mActiveDefaultNetwork != -1 && mActiveDefaultNetwork != type) {
-                if ((type != mNetworkPreference &&
+                if ((/*type != mNetworkPreference &&*/
                         mNetConfigs[mActiveDefaultNetwork].priority >
-                        mNetConfigs[type].priority) ||
-                        mNetworkPreference == mActiveDefaultNetwork) {
+                        mNetConfigs[type].priority) /*||
+                        mNetworkPreference == mActiveDefaultNetwork*/) {
                         // don't accept this one
                         if (VDBG) {
                             log("Not broadcasting CONNECT_ACTION " +

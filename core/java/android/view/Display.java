@@ -22,6 +22,7 @@ import android.graphics.Rect;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.util.DisplayMetrics;
 import android.util.Slog;
 
@@ -31,7 +32,12 @@ import android.util.Slog;
 public class Display {
     static final String TAG = "Display";
     static final boolean DEBUG_DISPLAY_SIZE = false;
-
+    /** @hide */
+    public static final int LONG_AXIS = 800;
+    /** @hide */
+    public static final int SHORT_AXIS = 480;
+    /** height of status bar */
+    private int mStatusbarHeight = 48;
     /**
      * The default Display id.
      */
@@ -55,6 +61,7 @@ public class Display {
         mCompatibilityInfo = compatInfo != null ? compatInfo : new CompatibilityInfoHolder();
         mDisplay = display;
         init(display);
+        mStatusbarHeight = (int)(mStatusbarHeight * mDensity);
     }
 
     /**
@@ -288,7 +295,41 @@ public class Display {
         return h;
     }
     private native int getRawHeightNative();
-    
+ 
+    /**
+     * Gets the raw width of the standard screen, in pixels.
+     * <p>
+     * The size is adjusted based on the current rotation of the display.
+     * </p>
+     * @hide
+     */
+    public int getStandardScreenWidth() {
+        int orientation = getRotation();
+        int w = ((mHardwareRotation / 90) % 2 == 1) ? 
+                     ((orientation % 2 == 1) ? LONG_AXIS : SHORT_AXIS) :
+                     ((orientation % 2 != 1) ? LONG_AXIS : SHORT_AXIS);
+        if (DEBUG_DISPLAY_SIZE) Slog.v(
+                TAG, "Returning standard screen display width: " + w);
+        return w;
+    }
+
+    /**
+     * Gets the raw height of the standard screen, in pixels.
+     * <p>
+     * The size is adjusted based on the current rotation of the display.
+     * </p>
+     * @hide
+     */
+    public int getStandardScreenHeight() {
+        int orientation = getRotation();
+        int h = ((mHardwareRotation / 90) % 2 != 1) ?
+                     ((orientation % 2 == 1) ? LONG_AXIS+mStatusbarHeight : SHORT_AXIS+mStatusbarHeight) :
+                     ((orientation % 2 != 1) ? LONG_AXIS+mStatusbarHeight : SHORT_AXIS+mStatusbarHeight);
+        if (DEBUG_DISPLAY_SIZE) Slog.v(
+                TAG, "Returning standard screen display height: " + h);
+        return h;
+    }
+
     /**
      * Returns the rotation of the screen from its "natural" orientation.
      * The returned value may be {@link Surface#ROTATION_0 Surface.ROTATION_0}
@@ -439,6 +480,7 @@ public class Display {
     // Following fields are initialized from native code
     private int         mPixelFormat;
     private float       mRefreshRate;
+    private int         mHardwareRotation;
     /*package*/ float   mDensity;
     /*package*/ float   mDpiX;
     /*package*/ float   mDpiY;

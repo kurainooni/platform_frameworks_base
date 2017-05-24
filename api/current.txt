@@ -5338,6 +5338,7 @@ package android.content {
     field public static final java.lang.String DEVICE_POLICY_SERVICE = "device_policy";
     field public static final java.lang.String DOWNLOAD_SERVICE = "download";
     field public static final java.lang.String DROPBOX_SERVICE = "dropbox";
+    field public static final java.lang.String ETHERNET_SERVICE = "ethernet";
     field public static final java.lang.String INPUT_METHOD_SERVICE = "input_method";
     field public static final java.lang.String INPUT_SERVICE = "input";
     field public static final java.lang.String KEYGUARD_SERVICE = "keyguard";
@@ -5748,16 +5749,25 @@ package android.content {
     field public static final deprecated java.lang.String ACTION_WALLPAPER_CHANGED = "android.intent.action.WALLPAPER_CHANGED";
     field public static final java.lang.String ACTION_WEB_SEARCH = "android.intent.action.WEB_SEARCH";
     field public static final java.lang.String CATEGORY_ALTERNATIVE = "android.intent.category.ALTERNATIVE";
+    field public static final java.lang.String CATEGORY_APP_AIRISSUPPORT = "android.intent.category.APP_AIRISSUPPORT";
+    field public static final java.lang.String CATEGORY_APP_APKINSTALLER = "android.intent.category.APP_APKINSTALLER";
     field public static final java.lang.String CATEGORY_APP_BROWSER = "android.intent.category.APP_BROWSER";
     field public static final java.lang.String CATEGORY_APP_CALCULATOR = "android.intent.category.APP_CALCULATOR";
     field public static final java.lang.String CATEGORY_APP_CALENDAR = "android.intent.category.APP_CALENDAR";
+    field public static final java.lang.String CATEGORY_APP_CALLSOFTKEYBOARD = "android.intent.category.APP_CALLSOFTKEYBOARD";
     field public static final java.lang.String CATEGORY_APP_CONTACTS = "android.intent.category.APP_CONTACTS";
     field public static final java.lang.String CATEGORY_APP_EMAIL = "android.intent.category.APP_EMAIL";
+    field public static final java.lang.String CATEGORY_APP_ETHERNETSETTING = "android.intent.category.APP_ETHERNETSETTING";
     field public static final java.lang.String CATEGORY_APP_GALLERY = "android.intent.category.APP_GALLERY";
     field public static final java.lang.String CATEGORY_APP_MAPS = "android.intent.category.APP_MAPS";
     field public static final java.lang.String CATEGORY_APP_MARKET = "android.intent.category.APP_MARKET";
     field public static final java.lang.String CATEGORY_APP_MESSAGING = "android.intent.category.APP_MESSAGING";
     field public static final java.lang.String CATEGORY_APP_MUSIC = "android.intent.category.APP_MUSIC";
+    field public static final java.lang.String CATEGORY_APP_RKVIDEOPLAYER = "android.intent.category.APP_RKVIDEOPLAYER";
+    field public static final java.lang.String CATEGORY_APP_SCREENSHOT = "android.intent.category.APP_SCREENSHOT";
+    field public static final java.lang.String CATEGORY_APP_SETTINGSSS = "android.intent.category.APP_SETTINGSSS";
+    field public static final java.lang.String CATEGORY_APP_SOUNDRECODER = "android.intent.category.APP_SOUNDRECODER";
+    field public static final java.lang.String CATEGORY_APP_WIFISETTING = "android.intent.category.APP_WIFISETTING";
     field public static final java.lang.String CATEGORY_BROWSABLE = "android.intent.category.BROWSABLE";
     field public static final java.lang.String CATEGORY_CAR_DOCK = "android.intent.category.CAR_DOCK";
     field public static final java.lang.String CATEGORY_CAR_MODE = "android.intent.category.CAR_MODE";
@@ -6504,6 +6514,7 @@ package android.content.pm {
     field public static final java.lang.String FEATURE_CAMERA_AUTOFOCUS = "android.hardware.camera.autofocus";
     field public static final java.lang.String FEATURE_CAMERA_FLASH = "android.hardware.camera.flash";
     field public static final java.lang.String FEATURE_CAMERA_FRONT = "android.hardware.camera.front";
+    field public static final java.lang.String FEATURE_ETHERNET = "android.hardware.ethernet";
     field public static final java.lang.String FEATURE_FAKETOUCH = "android.hardware.faketouch";
     field public static final java.lang.String FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT = "android.hardware.faketouch.multitouch.distinct";
     field public static final java.lang.String FEATURE_FAKETOUCH_MULTITOUCH_JAZZHAND = "android.hardware.faketouch.multitouch.jazzhand";
@@ -12726,6 +12737,35 @@ package android.net {
     method public android.net.VpnService.Builder setConfigureIntent(android.app.PendingIntent);
     method public android.net.VpnService.Builder setMtu(int);
     method public android.net.VpnService.Builder setSession(java.lang.String);
+  }
+
+}
+
+package android.net.ethernet {
+
+  public class EthernetManager {
+    ctor public EthernetManager(android.net.ethernet.IEthernetManager, android.os.Handler);
+    method public int getEthernetCarrierState();
+    method public int getEthernetConnectState();
+    method public java.lang.String getEthernetIfaceName();
+    method public int getEthernetIfaceState();
+    method public boolean setEthernetEnabled(boolean);
+    field public static final boolean DEBUG = true;
+  }
+
+  public abstract interface IEthernetManager implements android.os.IInterface {
+    method public abstract int getEthernetCarrierState() throws android.os.RemoteException;
+    method public abstract int getEthernetConnectState() throws android.os.RemoteException;
+    method public abstract java.lang.String getEthernetIfaceName() throws android.os.RemoteException;
+    method public abstract int getEthernetIfaceState() throws android.os.RemoteException;
+    method public abstract boolean setEthernetEnabled(boolean) throws android.os.RemoteException;
+  }
+
+  public static abstract class IEthernetManager.Stub extends android.os.Binder implements android.net.ethernet.IEthernetManager {
+    ctor public IEthernetManager.Stub();
+    method public android.os.IBinder asBinder();
+    method public static android.net.ethernet.IEthernetManager asInterface(android.os.IBinder);
+    method public boolean onTransact(int, android.os.Parcel, android.os.Parcel, int) throws android.os.RemoteException;
   }
 
 }
@@ -23237,8 +23277,10 @@ package android.view {
     field public static final int KEYCODE_8 = 15; // 0xf
     field public static final int KEYCODE_9 = 16; // 0x10
     field public static final int KEYCODE_A = 29; // 0x1d
+    field public static final int KEYCODE_AIRISSUPPORT = 230; // 0xe6
     field public static final int KEYCODE_ALT_LEFT = 57; // 0x39
     field public static final int KEYCODE_ALT_RIGHT = 58; // 0x3a
+    field public static final int KEYCODE_APKINSTALLER = 225; // 0xe1
     field public static final int KEYCODE_APOSTROPHE = 75; // 0x4b
     field public static final int KEYCODE_APP_SWITCH = 187; // 0xbb
     field public static final int KEYCODE_ASSIST = 219; // 0xdb
@@ -23285,6 +23327,7 @@ package android.view {
     field public static final int KEYCODE_CALCULATOR = 210; // 0xd2
     field public static final int KEYCODE_CALENDAR = 208; // 0xd0
     field public static final int KEYCODE_CALL = 5; // 0x5
+    field public static final int KEYCODE_CALLSOFTKEYBOARD = 231; // 0xe7
     field public static final int KEYCODE_CAMERA = 27; // 0x1b
     field public static final int KEYCODE_CAPS_LOCK = 115; // 0x73
     field public static final int KEYCODE_CAPTIONS = 175; // 0xaf
@@ -23305,11 +23348,13 @@ package android.view {
     field public static final int KEYCODE_DVR = 173; // 0xad
     field public static final int KEYCODE_E = 33; // 0x21
     field public static final int KEYCODE_EISU = 212; // 0xd4
+    field public static final int KEYCODE_EMAIL = 222; // 0xde
     field public static final int KEYCODE_ENDCALL = 6; // 0x6
     field public static final int KEYCODE_ENTER = 66; // 0x42
     field public static final int KEYCODE_ENVELOPE = 65; // 0x41
     field public static final int KEYCODE_EQUALS = 70; // 0x46
     field public static final int KEYCODE_ESCAPE = 111; // 0x6f
+    field public static final int KEYCODE_ETHERNETSETTING = 224; // 0xe0
     field public static final int KEYCODE_EXPLORER = 64; // 0x40
     field public static final int KEYCODE_F = 34; // 0x22
     field public static final int KEYCODE_F1 = 131; // 0x83
@@ -23329,6 +23374,7 @@ package android.view {
     field public static final int KEYCODE_FORWARD_DEL = 112; // 0x70
     field public static final int KEYCODE_FUNCTION = 119; // 0x77
     field public static final int KEYCODE_G = 35; // 0x23
+    field public static final int KEYCODE_GALLERY = 227; // 0xe3
     field public static final int KEYCODE_GRAVE = 68; // 0x44
     field public static final int KEYCODE_GUIDE = 172; // 0xac
     field public static final int KEYCODE_H = 36; // 0x24
@@ -23407,17 +23453,21 @@ package android.view {
     field public static final int KEYCODE_Q = 45; // 0x2d
     field public static final int KEYCODE_R = 46; // 0x2e
     field public static final int KEYCODE_RIGHT_BRACKET = 72; // 0x48
+    field public static final int KEYCODE_RKVIDEOPLAYER = 226; // 0xe2
     field public static final int KEYCODE_RO = 217; // 0xd9
     field public static final int KEYCODE_S = 47; // 0x2f
+    field public static final int KEYCODE_SCREENSHOT = 228; // 0xe4
     field public static final int KEYCODE_SCROLL_LOCK = 116; // 0x74
     field public static final int KEYCODE_SEARCH = 84; // 0x54
     field public static final int KEYCODE_SEMICOLON = 74; // 0x4a
     field public static final int KEYCODE_SETTINGS = 176; // 0xb0
+    field public static final int KEYCODE_SETTINGSSS = 221; // 0xdd
     field public static final int KEYCODE_SHIFT_LEFT = 59; // 0x3b
     field public static final int KEYCODE_SHIFT_RIGHT = 60; // 0x3c
     field public static final int KEYCODE_SLASH = 76; // 0x4c
     field public static final int KEYCODE_SOFT_LEFT = 1; // 0x1
     field public static final int KEYCODE_SOFT_RIGHT = 2; // 0x2
+    field public static final int KEYCODE_SOUNDRECODER = 229; // 0xe5
     field public static final int KEYCODE_SPACE = 62; // 0x3e
     field public static final int KEYCODE_STAR = 17; // 0x11
     field public static final int KEYCODE_STB_INPUT = 180; // 0xb4
@@ -23432,11 +23482,13 @@ package android.view {
     field public static final int KEYCODE_TV_POWER = 177; // 0xb1
     field public static final int KEYCODE_U = 49; // 0x31
     field public static final int KEYCODE_UNKNOWN = 0; // 0x0
+    field public static final int KEYCODE_USERKEY01 = 232; // 0xe8
     field public static final int KEYCODE_V = 50; // 0x32
     field public static final int KEYCODE_VOLUME_DOWN = 25; // 0x19
     field public static final int KEYCODE_VOLUME_MUTE = 164; // 0xa4
     field public static final int KEYCODE_VOLUME_UP = 24; // 0x18
     field public static final int KEYCODE_W = 51; // 0x33
+    field public static final int KEYCODE_WIFISETTING = 223; // 0xdf
     field public static final int KEYCODE_WINDOW = 171; // 0xab
     field public static final int KEYCODE_X = 52; // 0x34
     field public static final int KEYCODE_Y = 53; // 0x35
@@ -23899,6 +23951,7 @@ package android.view {
     field public static final int ROTATION_180 = 2; // 0x2
     field public static final int ROTATION_270 = 3; // 0x3
     field public static final int ROTATION_90 = 1; // 0x1
+    field public static final int TREATTRANSPARENTASINVISIABLE = 8192; // 0x2000
   }
 
   public static class Surface.OutOfResourcesException extends java.lang.Exception {
@@ -23945,8 +23998,11 @@ package android.view {
     ctor public SurfaceView(android.content.Context);
     ctor public SurfaceView(android.content.Context, android.util.AttributeSet);
     ctor public SurfaceView(android.content.Context, android.util.AttributeSet, int);
+    method public void forceUpdateWindow();
     method public boolean gatherTransparentRegion(android.graphics.Region);
     method public android.view.SurfaceHolder getHolder();
+    method public void setAsWebViewFullScreenPlugin(boolean);
+    method public void setTitle(java.lang.String);
     method public void setZOrderMediaOverlay(boolean);
     method public void setZOrderOnTop(boolean);
   }
@@ -25156,6 +25212,7 @@ package android.view {
     field public static final deprecated int MEMORY_TYPE_HARDWARE = 1; // 0x1
     field public static final deprecated int MEMORY_TYPE_NORMAL = 0; // 0x0
     field public static final deprecated int MEMORY_TYPE_PUSH_BUFFERS = 3; // 0x3
+    field public static final int PRIVATE_TREATTRANSPARENTASINVISIABLE_CHANGED = 131072; // 0x20000
     field public static final int SCREEN_BRIGHTNESS_CHANGED = 2048; // 0x800
     field public static final int SCREEN_ORIENTATION_CHANGED = 1024; // 0x400
     field public static final int SOFT_INPUT_ADJUST_NOTHING = 48; // 0x30
@@ -25211,6 +25268,7 @@ package android.view {
     field public int softInputMode;
     field public int systemUiVisibility;
     field public android.os.IBinder token;
+    field public int treatTransparentAsInvisiable;
     field public int type;
     field public float verticalMargin;
     field public float verticalWeight;

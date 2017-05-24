@@ -1268,6 +1268,26 @@ final class ApplicationPackageManager extends PackageManager {
         return null;
     }
 
+    @Override
+    public int getPackageHardwareAccMode(String pkgName) {
+        try {
+            return mPM.getPackageHardwareAccMode(pkgName);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
+        return PackageManager.HARDWARE_ACC_MODE_NORMAL;
+    }
+
+    @Override
+    public void setPackageHardwareAccMode(String pkgName, int mode) {
+        try {
+            mPM.setPackageHardwareAccMode(pkgName, mode);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
+    }
+
+
     private final ContextImpl mContext;
     private final IPackageManager mPM;
 

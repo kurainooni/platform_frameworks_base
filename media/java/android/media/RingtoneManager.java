@@ -229,7 +229,7 @@ public class RingtoneManager {
     private boolean mStopPreviousRingtone = true;
     private Ringtone mPreviousRingtone;
 
-    private boolean mIncludeDrm;
+    private boolean mIncludeDrm=true;
     
     /**
      * Constructs a RingtoneManager. This constructor is recommended as its
@@ -365,7 +365,7 @@ public class RingtoneManager {
         final Cursor internalCursor = getInternalRingtones();
         final Cursor drmCursor = mIncludeDrm ? getDrmRingtones() : null;
         final Cursor mediaCursor = getMediaRingtones();
-             
+
         return mCursor = new SortCursor(new Cursor[] { internalCursor, drmCursor, mediaCursor },
                 MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
     }

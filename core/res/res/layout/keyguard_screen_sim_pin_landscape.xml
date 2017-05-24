@@ -44,7 +44,7 @@
         android:ellipsize="marquee"
         android:textAppearance="?android:attr/textAppearanceMedium"
     />
-
+    
     <!-- displays dots as user enters pin -->
     <LinearLayout android:id="@+id/pinDisplayGroup"
         android:orientation="horizontal"
@@ -65,12 +65,14 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:maxLines="1"
-            android:background="@null"
             android:textSize="32sp"
+            android:textColor="@android:color/primary_text_holo_light"
+            android:textStyle="bold"
             android:inputType="textPassword"
+            android:hint="@android:string/keyguard_password_enter_pin_prompt"
             />
 
-        <ImageButton android:id="@+id/backspace"
+				<ImageButton android:id="@+id/backspace"
              android:src="@android:drawable/ic_input_delete"
              android:layout_width="wrap_content"
              android:layout_height="match_parent"
@@ -79,9 +81,8 @@
              android:layout_marginBottom="2dip"
              android:gravity="center"
             />
-
     </LinearLayout>
-        
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"

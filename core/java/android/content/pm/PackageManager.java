@@ -761,6 +761,35 @@ public abstract class PackageManager {
     public static final int VERIFICATION_REJECT = -1;
 
     /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_UNKNOWN = 0;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_LOW = 1;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_NORMAL = 2;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_HIGH = 3;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_MAX = 4;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_MODE_SAFE = 5;
+    /**
+     * @hide
+     */
+    public static final int HARDWARE_ACC_FLAG_ASSIGNED = 8;
+
+    /**
      * Feature for {@link #getSystemAvailableFeatures} and {@link #hasSystemFeature}: The device's
      * audio pipeline is low-latency, more suitable for audio applications sensitive to delays or
      * lag in sound input or output.
@@ -805,6 +834,15 @@ public abstract class PackageManager {
     @SdkConstant(SdkConstantType.FEATURE)
     public static final String FEATURE_CAMERA_FRONT = "android.hardware.camera.front";
 
+//$_rbox_$_modify_$_chenzhi_20120309: for ethernet
+//$_rbox_$_modify_$_begin
+    /**
+     * Feature for {@link #getSystemAvailableFeatures} and
+     * {@link #hasSystemFeature}: The device supports Ethernet networking.
+     */
+    @SdkConstant(SdkConstantType.FEATURE)
+    public static final String FEATURE_ETHERNET = "android.hardware.ethernet";
+//$_rbox_$_modify_$_end
     /**
      * Feature for {@link #getSystemAvailableFeatures} and
      * {@link #hasSystemFeature}: The device supports one or more methods of
@@ -1067,6 +1105,16 @@ public abstract class PackageManager {
      */
     @SdkConstant(SdkConstantType.FEATURE)
     public static final String FEATURE_TELEVISION = "android.hardware.type.television";
+
+    /**
+     *@hide
+     */
+    public static final String FEATURE_APP_PERFORMANCE = "rockchip.hardware.gpu.performance";
+
+     /**
+     *@hide
+     */
+    public static final String FEATURE_APP_FSAA = "rockchip.hardware.gpu.fsaa";
 
     /**
      * Action to external storage service to clean out removed apps.
@@ -2686,4 +2734,14 @@ public abstract class PackageManager {
         return Environment.getDataDirectory().toString() + "/user/" + userId
                 + "/" + packageName;
     }
+
+    /**
+     * @hide
+     */
+    public abstract int getPackageHardwareAccMode(String pkgName);
+
+    /**
+     * @hide
+     */
+    public abstract void setPackageHardwareAccMode(String pkgName, int mode);
 }

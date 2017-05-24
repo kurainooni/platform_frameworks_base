@@ -40,7 +40,8 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
-
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +99,22 @@ public class InputMethodsPanel extends LinearLayout implements StatusBarPanel,
             return imiId1.toString().compareTo(imiId2.toString());
         }
     }
+/*
+		public void openSoftKeyboard() {
+				InputMethodManager imm = (InputMethodManager)mContext.getSystemService(Context.INPUT_METHOD_SERVICE); 
+	      Slog.i(TAG, "############m="+imm);
+				imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+	      Slog.i(TAG, "############m.isActive()="+imm.isActive());
+		}
+*/
+
+
+
+
+
+
+
+
 
     public InputMethodsPanel(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -115,6 +132,7 @@ public class InputMethodsPanel extends LinearLayout implements StatusBarPanel,
 
     public void setHardKeyboardEnabledChangeListener(
             OnHardKeyboardEnabledChangeListener listener) {
+		Log.d(TAG,"setHardKeyboardEnabledChangeListener:"+listener);
         mHardKeyboardEnabledChangeListener = listener;
     }
 
@@ -143,6 +161,16 @@ public class InputMethodsPanel extends LinearLayout implements StatusBarPanel,
         mHardKeyboardSwitch = (Switch) findViewById(R.id.hard_keyboard_switch);
         mConfigureImeShortcut = findViewById(R.id.ime_settings_shortcut);
         mConfigureImeShortcut.setOnClickListener(this);
+		
+	    mHardKeyboardSwitch.setOnCheckedChangeListener(
+			new OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(
+						CompoundButton buttonView, boolean isChecked) {
+					updateHardKeyboardEnabled();
+			}
+		});
+
         // TODO: If configurations for IME are not changed, do not update
         // by checking onConfigurationChanged.
         updateUiElements();

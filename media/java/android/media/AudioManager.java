@@ -222,7 +222,17 @@ public class AudioManager {
 
     /**  @hide Default volume index values for audio streams */
     public static final int[] DEFAULT_STREAM_VOLUME = new int[] {
-        4,  // STREAM_VOICE_CALL
+        30,  // STREAM_VOICE_CALL
+        30,  // STREAM_SYSTEM
+        30,  // STREAM_RING
+        30, // STREAM_MUSIC
+        30,  // STREAM_ALARM
+        30,  // STREAM_NOTIFICATION
+        30,  // STREAM_BLUETOOTH_SCO
+        30,  // STREAM_SYSTEM_ENFORCED
+        30, // STREAM_DTMF
+        30  // STREAM_TTS
+/*        4,  // STREAM_VOICE_CALL
         7,  // STREAM_SYSTEM
         5,  // STREAM_RING
         11, // STREAM_MUSIC
@@ -231,7 +241,7 @@ public class AudioManager {
         7,  // STREAM_BLUETOOTH_SCO
         7,  // STREAM_SYSTEM_ENFORCED
         11, // STREAM_DTMF
-        11  // STREAM_TTS
+        11  // STREAM_TTS*/
     };
 
     /**
@@ -1364,7 +1374,8 @@ public class AudioManager {
      *              it can route the audio appropriately.
      */
     public void setMode(int mode) {
-        IAudioService service = getService();
+ 
+	IAudioService service = getService();
         try {
             service.setMode(mode, mICallBack);
         } catch (RemoteException e) {

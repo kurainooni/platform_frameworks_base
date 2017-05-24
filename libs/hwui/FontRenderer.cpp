@@ -541,6 +541,14 @@ void FontRenderer::flushAllAndInvalidate() {
         mCurrentQuadIndex = 0;
     }
 
+    /** rk2918 GPU: waitting for all gl draw commands finished.
+      * for bug: text render wrong when "enable force gpu renderer". 
+      * for example: messages view, document view.
+     **/
+    #ifdef TARGET_RK2918
+    glFinish();
+    #endif
+
     for (uint32_t i = 0; i < mActiveFonts.size(); i++) {
         mActiveFonts[i]->invalidateTextureCache();
     }
